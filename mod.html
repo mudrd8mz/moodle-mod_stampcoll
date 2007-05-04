@@ -1,0 +1,157 @@
+<?php // $Id$
+
+    require_once("$CFG->dirroot/mod/stampcoll/lib.php");
+    require_once("$CFG->libdir/filelib.php");              // due to mimeinfo() being used
+
+    if (!isset($form->name)) {
+        $form->name = '';
+    }
+    if (!isset($form->text)) {
+        $form->text = '';
+    }
+    if (!isset($form->format)) {
+        $form->format = 0;
+    }
+    if (!isset($form->image)) {
+        $form->image = '';
+    }
+    if (!isset($form->publish)) {
+        $form->publish = STAMPCOLL_DISPLAY_ALL;
+    }
+    if (!isset($form->displayzero)) {
+        $form->displayzero = false;
+    }
+    if (!isset($form->teachercancollect)) {
+        $form->teachercancollect = true;
+    }
+?>
+
+<script type="text/javascript">
+<!--
+function stampcoll_unlockselects(form, master, subitems) {
+  if (eval("document."+form+"."+master+".selected")) {
+    for (i=0; i<subitems.length; i++) {
+      unlockoption(form, subitems[i]);
+    }
+  } else {
+    for (i=0; i<subitems.length; i++) {
+      lockoption(form, subitems[i]);
+    }
+  }
+  return(true);
+}
+-->
+</script>
+
+<form name="form" method="post" action="mod.php">
+
+<table cellpadding="5">
+
+<tr valign="top">
+    <td align="right"><strong><?php print_string("name") ?>:</strong></td>
+    <td>
+        <input type="text" name="name" size="30" alt="<?php print_string("name") ?>" value="<?php p($form->name) ?>" />
+    </td>
+</tr>
+
+<tr valign="top">
+    <td align="right"><strong><?php print_string("description") ?>:</strong><br /><br />
+     <?php
+        helpbutton("writing", get_string("helpwriting"), "moodle", true, true);
+        echo "<br />";
+        helpbutton("questions", get_string("helpquestions"), "moodle", true, true);
+        echo "<br />";
+        if ($usehtmleditor) {
+           helpbutton("richtext", get_string("helprichtext"), "moodle", true, true);
+        } else {
+           emoticonhelpbutton("form", "text");
+        }
+        echo "<br />";
+      ?>
+    </td>
+    <td>
+    <?php
+       print_textarea($usehtmleditor, 20, 60, 680, 400, "text", $form->text);
+
+       if ($usehtmleditor) {
+           echo '<input type="hidden" name="format" value="'.FORMAT_HTML.'" />';
+       } else {
+           echo "<div align=\"right\">";
+           helpbutton("textformat", get_string("formattexttype"));
+           print_string("formattexttype");
+           echo ":&nbsp;";
+           if (!$form->format) {
+               $form->format = $defaultformat;
+           }
+           choose_from_menu(format_text_menu(), "format", $form->format, "");
+           echo "</div>";
+       }
+    ?>
+    </td>
+</tr>
+<tr valign="top">
+    <td align="right"><b><?php print_string("stampimage", "stampcoll") ?>:</b></td>
+    <td>
+    <?php   
+        make_upload_directory("$course->id");    // Just in case
+        $coursefiles = get_directory_list("$CFG->dataroot/$course->id", $CFG->moddata);
+        $images = array();
+        foreach ($coursefiles as $filename) {
+            if (mimeinfo("icon", $filename) == "image.gif") {
+                $images["$filename"] = $filename;
+            }
+        }
+        choose_from_menu($images, "image", "$form->image", get_string("default"), "", "default");
+        print_string("stampimageinfo", "stampcoll");
+    ?>
+    </td>
+</tr>
+<tr valign="top">
+    <td align="right"><strong><?php print_string("publish","stampcoll") ?>:</strong></td>
+    <td>
+        <?php
+        choose_from_menu($STAMPCOLL_DISPLAY, "publish", "$form->publish", "", "return stampcoll_unlockselects('form','publish.options[".STAMPCOLL_DISPLAY_ALL."]',['displayzero'])" );
+        ?>
+    </td>
+</tr>
+
+<tr valign="top">
+    <td align="right"><strong><?php print_string("displayzero", "stampcoll") ?>:</strong></td>
+    <td>
+        <?php
+        choose_from_menu($STAMPCOLL_DISPLAYZERO, "displayzero", "$form->displayzero", "");
+        ?>
+        <br />
+        <input type="hidden" name="hdisplayzero" value="0" />
+        <script type="text/javascript">    
+            <!--
+            stampcoll_unlockselects('form','publish.options[<?php echo STAMPCOLL_DISPLAY_ALL;?>]',['displayzero']);
+            -->
+        </script>
+    </td>
+</tr>
+
+<tr valign="top">
+    <td align="right"><strong><?php print_string("teachercancollect", "stampcoll", $course->teacher) ?>:</strong></td>
+    <td>
+        <?php
+        choose_from_menu($STAMPCOLL_TEACHERCANCOLLECT, "teachercancollect", "$form->teachercancollect", "");
+        ?>
+    </td>
+</tr>
+<?php print_standard_coursemodule_settings($form); ?>
+</table>
+
+<center>
+<input type="hidden" name="course"     value="<?php p($form->course) ?>" />
+<input type="hidden" name="sesskey"    value="<?php p($form->sesskey) ?>" />
+<input type="hidden" name="coursemodule"  value="<?php p($form->coursemodule) ?>" />
+<input type="hidden" name="section"    value="<?php p($form->section) ?>" />
+<input type="hidden" name="module"     value="<?php p($form->module) ?>" />
+<input type="hidden" name="modulename" value="<?php p($form->modulename) ?>" />
+<input type="hidden" name="instance"   value="<?php p($form->instance) ?>" />
+<input type="hidden" name="mode"       value="<?php p($form->mode) ?>" />
+<input type="submit" value="<?php print_string("savechanges") ?>" />
+<input type="submit" name="cancel" value="<?php print_string("cancel") ?>" />
+</center>
+</form>

@@ -1,3 +1,5 @@
 * reimplement forms according to http://docs.moodle.org/en/Development:lib/formslib.php_Usage
 
 * allow to edit multiple stamps in one form with one "Save changes button"
+
+* implement roles and capabilities

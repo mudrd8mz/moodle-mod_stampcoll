@@ -26,10 +26,10 @@ CREATE TABLE prefix_stampcoll_stamps (
   KEY prefix_stampcoll_stamps_stampcollid_idx (stampcollid)
 ) COMMENT='All collected stamps are stored here.';
 
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'view', 'stampcoll', 'name');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'update', 'stampcoll', 'name');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'add', 'stampcoll', 'name');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'view stamp', 'user', 'concat(firstname, \' \', lastname)');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'add stamp', 'user', 'concat(firstname, \' \', lastname)');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'update stamp', 'user', 'concat(firstname, \' \', lastname)');
-INSERT INTO prefix_log_display VALUES ('stampcoll', 'delete stamp', 'user', 'concat(firstname, \' \', lastname)');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'view', 'stampcoll', 'name');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'update', 'stampcoll', 'name');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'add', 'stampcoll', 'name');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'view stamp', 'user', 'concat(firstname, \' \', lastname)');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'add stamp', 'user', 'concat(firstname, \' \', lastname)');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'update stamp', 'user', 'concat(firstname, \' \', lastname)');
+INSERT INTO prefix_log_display (module, action, mtable, field) VALUES ('stampcoll', 'delete stamp', 'user', 'concat(firstname, \' \', lastname)');

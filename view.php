@@ -178,14 +178,7 @@
 
         $table->pagesize($perpage, count($users));
         
-        if($table->get_page_start() !== '' && $table->get_page_size() !== '') {
-            $limit = ' '.sql_paging_limit($table->get_page_start(), $table->get_page_size());     
-        }
-        else {
-            $limit = '';
-        }
-
-        if (($ausers = get_records_sql($select.$sql.$sort.$limit)) !== false) {
+        if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
             
             foreach ($ausers as $auser) {
                 $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);

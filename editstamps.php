@@ -182,8 +182,8 @@
     $page = optional_param('page', 0, PARAM_INT);
 
     
-    $tablecolumns = array('picture', 'fullname', 'count', 'comment', 'button');
-    $tableheaders = array('', get_string('fullname'), get_string('numberofstamps', 'stampcoll'), '', '');
+    $tablecolumns = array('picture', 'fullname', 'count', 'comment');
+    $tableheaders = array('', get_string('fullname'), get_string('numberofstamps', 'stampcoll'), '');
 
     require_once($CFG->libdir.'/tablelib.php');
 
@@ -204,7 +204,6 @@
     $table->column_class('fullname', 'fullname');
     $table->column_class('count', 'count');
     $table->column_class('comment', 'comment');
-    $table->column_class('button', 'button');
 
 //    $table->column_style('comment', 'width', '40%');
 
@@ -250,14 +249,7 @@
 
     $table->pagesize($perpage, count($users));
     
-    if($table->get_page_start() !== '' && $table->get_page_size() !== '') {
-        $limit = ' '.sql_paging_limit($table->get_page_start(), $table->get_page_size());     
-    }
-    else {
-        $limit = '';
-    }
-
-    if (($ausers = get_records_sql($select.$sql.$sort.$limit)) !== false) {
+    if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
         
         foreach ($ausers as $auser) {
             $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
@@ -269,8 +261,8 @@
             $comment .= '<input type="hidden" name="userid" value="'.$auser->id.'" />';
             $comment .= '<input type="hidden" name="page" value="'.$page.'" />';
             $comment .= '<input type="hidden" name="addstamp" value="1" />';
-            $button = '<input type="submit" value="'.get_string('addstampbutton', 'stampcoll').'" /></form>';
-            $row = array($picture, $fullname, $count, $comment, $button);
+            $comment .= '<input type="submit" value="'.get_string('addstampbutton', 'stampcoll').'" /></form>';
+            $row = array($picture, $fullname, $count, $comment);
             $table->add_data($row);
 
             if ($showupdateforms && isset($userstamps[$auser->id])) {
@@ -285,8 +277,8 @@
                     $comment .= '<input type="hidden" name="stampid" value="'.$userstamp->id.'" />';
                     $comment .= '<input type="hidden" name="page" value="'.$page.'" />';
                     $comment .= '<input type="hidden" name="updatestamp" value="1" />';
-                    $button = '<input type="submit" value="'.get_string('updatestampbutton', 'stampcoll').'" /></form>';
-                    $row = array($picture, $fullname, $count, $comment, $button);
+                    $comment .= '<input type="submit" value="'.get_string('updatestampbutton', 'stampcoll').'" /></form>';
+                    $row = array($picture, $fullname, $count, $comment);
                     $table->add_data($row);
                 }
             }
@@ -314,7 +306,7 @@
     echo '<td align="left">';
     echo '<input type="checkbox" id="showupdateforms" name="showupdateforms" value="1" ';
     if ($showupdateforms) {
-        echo 'checked ';
+        echo 'checked="checked" ';
     }
     echo '/>';
     helpbutton('showupdateforms', get_string('showupdateforms','stampcoll'), 'stampcoll');

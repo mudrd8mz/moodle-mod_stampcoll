@@ -7,12 +7,6 @@
  */
 define('STAMPCOLL_USERS_PER_PAGE', 30);
 
-/**
- * Some obsolete configuration constants. These are kept here for backward compatibility and upgrade process.
- */
-define('STAMPCOLL_PUBLISH_NONE',    '0');
-define('STAMPCOLL_PUBLISH_SELFONLY',    '1');
-define('STAMPCOLL_PUBLISH_ALL',         '2');
 
 /// MODULE FUNCTIONS //////////////////////////////////////////////////////
 

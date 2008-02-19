@@ -1,37 +1,18 @@
 <?php // $Id$
 
 /// MODULE CONSTANTS //////////////////////////////////////////////////////
-    
+
 /**
- * Display self stamps?
+ * Default number of students per page
+ */
+define('STAMPCOLL_USERS_PER_PAGE', 30);
+
+/**
+ * Some obsolete configuration constants. These are kept here for backward compatibility and upgrade process.
  */
 define('STAMPCOLL_PUBLISH_NONE',    '0');
-
-/**
- * Display self stamps only?
- */
 define('STAMPCOLL_PUBLISH_SELFONLY',    '1');
-
-/**
- * Display all stamps?
- */
 define('STAMPCOLL_PUBLISH_ALL',         '2');
-
-$STAMPCOLL_PUBLISH = array (STAMPCOLL_PUBLISH_NONE      => get_string('publishnone', 'stampcoll'),
-                            STAMPCOLL_PUBLISH_SELFONLY  => get_string('publishselfonly', 'stampcoll'),
-                            STAMPCOLL_PUBLISH_ALL       => get_string('publishall', 'stampcoll'));
-
-/**
- * Can teacher collect stamps?
- */
-$STAMPCOLL_TEACHERCANCOLLECT = array (  0 => get_string('no'),
-                                        1 => get_string('yes'));
-
-/**
- * Display rows with none stamps collected?
- */
-$STAMPCOLL_DISPLAYZERO = array (    0 => get_string('no'),
-                                    1 => get_string('yes'));
 
 /// MODULE FUNCTIONS //////////////////////////////////////////////////////
 
@@ -101,6 +82,7 @@ function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
  */
 function stampcoll_add_instance($stampcoll) {
     $stampcoll->timemodified = time();
+    $stampcoll->text = trim($stampcoll->text);
     return insert_record("stampcoll", $stampcoll);
 }
 
@@ -113,6 +95,7 @@ function stampcoll_add_instance($stampcoll) {
 function stampcoll_update_instance($stampcoll) {
     $stampcoll->id = $stampcoll->instance;
     $stampcoll->timemodified = time();
+    $stampcoll->text = trim($stampcoll->text);
     return update_record('stampcoll', $stampcoll);
 }
 
@@ -158,6 +141,33 @@ function stampcoll_get_participants($stampcollid) {
                                  WHERE s.stampcollid = '$stampcollid' AND
                                        u.id = s.userid");
     return ($students);
+}
+
+/**
+ * Get all users who can collect stamps in the given Stamp Collection
+ *
+ * Returns array of users with the capability mod/stampcoll:collectstamps. Caller may specify the group.
+ * If groupmembersonly used, do not return users who are not in any group.
+ *
+ * @uses $CFG;
+ * @param object $cm Course module record
+ * @param object $context Current context
+ * @param int $currentgroup ID of group the users must be in
+ * @return array Array of users
+ */
+function stampcoll_get_users_can_collect($cm, $context, $currentgroup=false) {
+    global $CFG;
+    $users = get_users_by_capability($context, 'mod/stampcoll:collectstamps', 'u.id,u.picture,u.firstname,u.lastname',
+                        '', '', '', $currentgroup, '', false, true);
+
+    /// If groupmembersonly used, remove users who are not in any group
+    /// XXX this has not been tested yet !!!
+    if ($users && !empty($CFG->enablegroupings) && $cm->groupmembersonly) {
+        if ($groupingusers = groups_get_grouping_members($cm->groupingid, 'u.id,u.picture,u.firstname,u.lastname' )) {
+            $users = array_intersect($users, $groupingusers);
+        }
+    }
+    return $users;
 }
 
 /**

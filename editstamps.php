@@ -1,11 +1,12 @@
 <?php  // $Id$
 
-    require_once("../../config.php");
-    require_once("lib.php");
+    require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+    require_once(dirname(__FILE__).'/lib.php');
 
-    $id = required_param('id',PARAM_INT);    // Course Module ID
+    $id = required_param('id',PARAM_INT);           // Course Module ID
+    $page = optional_param('page', 0, PARAM_INT);   // Page of the batch view
 
-    if (! $cm = get_record("course_modules", "id", $id)) {
+    if (! $cm = get_coursemodule_from_id('stampcoll', $id)) {
         error("Course Module ID was incorrect");
     }
 
@@ -15,8 +16,13 @@
 
     require_login($course->id, false, $cm);
 
-    if (!isteacher($course->id)) {
-        error("Only teachers can look at this page");
+/// Get capabilities
+    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    include(dirname(__FILE__).'/caps.php');
+
+    if (!$cap_givestamps) {
+        // Illegal access to the page
+        error("You are not allowed to use this page");
     }
 
     if (!$stampcoll = stampcoll_get_stampcoll($cm->instance)) {
@@ -30,8 +36,8 @@
     /// First we check to see if the preferences form has just been submitted
     /// to request user_preference updates
     if (isset($_POST['updatepref'])){
-        $perpage = optional_param('perpage', 30, PARAM_INT);
-        $perpage = ($perpage <= 0) ? 30 : $perpage ;
+        $perpage = optional_param('perpage', STAMPCOLL_USERS_PER_PAGE, PARAM_INT);
+        $perpage = ($perpage <= 0) ? STAMPCOLL_USERS_PER_PAGE : $perpage ;
         set_user_preference('stampcoll_perpage', $perpage);
         if (isset($_POST['showupdateforms']) && $_POST['showupdateforms'] == "1") {
             set_user_preference('stampcoll_showupdateforms', 1);
@@ -46,9 +52,14 @@
     $strstampcoll = get_string("modulename", "stampcoll");
     $strstampcolls = get_string("modulenameplural", "stampcoll");
 
+    $navigation = build_navigation(get_string('editstamps', 'stampcoll') , $cm);
+    print_header_simple(format_string($stampcoll->name), '',
+                  $navigation, '', '', true,
+                  update_module_button($cm->id, $course->id, $strstampcoll), navmenu($course, $cm));
 
-    print_header_simple(format_string($stampcoll->name), "",
-    "<a href=\"index.php?id=$course->id\">$strstampcolls</a> -> <a href=\"view.php?id=$id\">".format_string($stampcoll->name)."</a> -> ".get_string("editstamps", "stampcoll"), "", "", true, update_module_button($cm->id, $course->id, $strstampcoll), navmenu($course, $cm));
+/// Print the tabs
+    $currenttab = 'edit';
+    include(dirname(__FILE__).'/tabs.php');
 
 /// Submit any new data if there is any
 
@@ -92,6 +103,9 @@
             exit;
         }
         if (isset($form->deletestamp)) {
+            //
+            // TODO check mod/stampcoll:deletestamps, if not allowed, do not display the delete icon
+            //
             if (!isset($form->sesskey) || !confirm_sesskey($form->sesskey)) {
                 error('Sesskey error');
             }
@@ -122,7 +136,7 @@
             error("Invalid stamp ID");
         }
 
-        print_simple_box_start('center', '60%');
+        print_box_start();
 
         print_heading(get_string("confirmdel", "stampcoll"));
 
@@ -136,16 +150,14 @@
         $form .= '<input type="button" value="'.get_string('no').'" onclick="javascript:history.go(-1);" />';
         $form .= '</form></div>';
         echo $form;
-        print_simple_box_end();
+        print_box_end();
 
-        print_simple_box_start('center', '40%', '', 5, 'delstampbox');
+        print_box_start('delstampbox');
         echo '<div class="picture">'.$stampimage.'</div>';
         echo '<div class="comment">'.format_text($stamp->comment).'</div>';
-        echo '<div class="timemodified">'.get_string('timemodified', 'stampcoll').': '.userdate($stamp->timemodified).'</div>';
-
-        print_simple_box_end();
-      
-        print_simple_box_end();
+        echo '<div class="timemodified">'.get_string('timemodified', 'stampcoll').': '.
+                                                userdate($stamp->timemodified).'</div>';
+        print_box_end();
         print_footer($course);
         exit;
     }
@@ -158,29 +170,17 @@
     unset($allstamps);
     unset($s);
     
-    /// Check to see if groups are being used in this stampcoll
-    if ($groupmode = groupmode($course, $cm)) {   // Groups are being used
-        $currentgroup = setup_and_print_groups($course, $groupmode, "editstamps.php?id=$cm->id");
-    } else {
-        $currentgroup = false;
-    }
-
-    if ($currentgroup) {
-        $users = get_group_users($currentgroup, "u.firstname ASC", '', 'u.id, u.picture, u.firstname, u.lastname');
-    } else {
-        $users = get_course_users($course->id, "u.firstname ASC", '', 'u.id, u.picture, u.firstname, u.lastname') + get_admins();
-    }
-
+/// Groups and users
+    groups_print_activity_menu($cm, 'editstamps.php?page='.$page.'&amp;id='.$cm->id);
+    $currentgroup = groups_get_activity_group($cm);
+    $users = stampcoll_get_users_can_collect($cm, $context, $currentgroup);
     if (!$users) {
         print_heading(get_string("nousersyet"));
     }
 
-    /// Next we get perpage param from database
-    $perpage = get_user_preferences('stampcoll_perpage', 30);
+/// Get perpage param from database
+    $perpage = get_user_preferences('stampcoll_perpage', STAMPCOLL_USERS_PER_PAGE);
     $showupdateforms = get_user_preferences('stampcoll_showupdateforms', 1);
-    
-    $page = optional_param('page', 0, PARAM_INT);
-
     
     $tablecolumns = array('picture', 'fullname', 'count', 'comment');
     $tableheaders = array('', get_string('fullname'), get_string('numberofstamps', 'stampcoll'), '');
@@ -205,8 +205,6 @@
     $table->column_class('count', 'count');
     $table->column_class('comment', 'comment');
 
-//    $table->column_style('comment', 'width', '40%');
-
     $table->set_attribute('cellspacing', '0');
     $table->set_attribute('id', 'stamps');
     $table->set_attribute('class', 'stamps');
@@ -215,16 +213,6 @@
 
     $table->setup();
 
-    if (!$stampcoll->teachercancollect) {
-        $teachers = get_course_teachers($course->id);
-        if (!empty($teachers)) {
-            $keys = array_keys($teachers);
-        }
-        foreach ($keys as $key) {
-            unset($users[$key]);
-        }
-    }
-    
     if (empty($users)) {
         print_heading(get_string('nousers','stampcoll'));
         return true;
@@ -235,8 +223,6 @@
     if ($where = $table->get_sql_where()) {
         $where .= ' AND ';
     }
-
-    
     
     if ($sort = $table->get_sql_sort()) {
         $sort = ' ORDER BY '.$sort;

@@ -15,8 +15,9 @@
 
     $strstamps = get_string("modulenameplural", "stampcoll");
 
+    $navigation = build_navigation($strstamps);
     print_header_simple("$strstamps", "",
-                 "$strstamps", "", "", true, "", navmenu($course));
+                 $navigation, "", "", true, "", navmenu($course));
 
 
     if (! $stampcolls = get_all_instances_in_course("stampcoll", $course)) {

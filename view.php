@@ -1,11 +1,13 @@
 <?php  // $Id$
 
-    require_once("../../config.php");
-    require_once("lib.php");
+    require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+    require_once(dirname(__FILE__).'/lib.php');
 
-    $id = required_param('id',PARAM_INT);    // Course Module ID
+    $id = required_param('id',PARAM_INT);               // Course Module ID
+    $view = optional_param('view', 'all', PARAM_ALPHA); // Stamps to display
+    $page = optional_param('page', 0, PARAM_INT);       // Page of the batch view
 
-    if (! $cm = get_record("course_modules", "id", $id)) {
+    if (! $cm = get_coursemodule_from_id('stampcoll', $id)) {
         error("Course Module ID was incorrect");
     }
 
@@ -13,10 +15,18 @@
         error("Course is misconfigured");
     }
 
-    require_course_login($course, false, $cm);
+    require_course_login($course, true, $cm);
 
     if (!$stampcoll = stampcoll_get_stampcoll($cm->instance)) {
         error("Course module is incorrect");
+    }
+
+/// If it's hidden then don't show anything
+    if (empty($cm->visible) and !isteacher($course->id)) {
+        $navigation = build_navigation('', $cm);
+        print_header_simple(format_string($stampcoll->name), "",
+                 $navigation, "", "", true, '', navmenu($course, $cm));
+        notice(get_string("activityiscurrentlyhidden"));
     }
 
     $stampimage = stampcoll_image($stampcoll->id);
@@ -25,39 +35,55 @@
 
     add_to_log($course->id, "stampcoll", "view", "view.php?id=$cm->id", $stampcoll->id, $cm->id);
 
+    $navigation = build_navigation('', $cm);
     print_header_simple(format_string($stampcoll->name), "",
-                 "<a href=\"index.php?id=$course->id\">$strstampcolls</a> -> ".format_string($stampcoll->name), "", "", true,
+                  $navigation, "", "", true,
                   update_module_button($cm->id, $course->id, $strstampcoll), navmenu($course, $cm));
 
-    if (isteacher($course->id)) {
-        echo '<div class="reportlink">';
-        echo "<a href=\"editstamps.php?id=$cm->id\">".get_string("editstamps", "stampcoll")."</a>";
-        echo '</div>';
-    } else if (!$cm->visible) {
-        notice(get_string("activityiscurrentlyhidden"), "../../course/view.php?id=$course->id");
+/// Get capabilities
+    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    include(dirname(__FILE__).'/caps.php');
+
+    if ($cap_viewonlyownstamps && $view == 'all') {
+        $view = 'own';
     }
 
-    if ($stampcoll->text) {
-        print_simple_box(format_text($stampcoll->text, $stampcoll->format), 'center', '70%', '', 5, 'generalbox', 'intro');
+/// Print the tabs
+    switch ($view) {
+        case 'own': $currenttab = 'viewown'; break;
+        default: $currenttab = 'view'; break;
+    }
+    include(dirname(__FILE__).'/tabs.php');
+
+/// Print activity introduction (description)
+    if (in_array($currenttab, array('view', 'viewown')) and (!empty($stampcoll->text))) {
+        print_box(format_text($stampcoll->text), 'generalbox', 'intro');
     }
 
-    if ((!isteacher($course->id)) && ($stampcoll->publish == STAMPCOLL_PUBLISH_NONE)) {
-        notice(get_string("stampsarenotpublic", "stampcoll"), "../../course/view.php?id=$course->id");
+    if (!$cap_viewsomestamps) {
+        notice(get_string('notallowedtoviewstamps', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
-    
+
     if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
-        notice(get_string('nostampsyet', 'stampcoll'), "../../course/view.php?id=$course->id");
+        notice(get_string('nostampsyet', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
     
-    /// Load all stamps into an array
+/// Re-sort all stamps into "by-user-array"
     $userstamps = array();
     foreach ($allstamps as $s) {
+        if (($s->userid == $USER->id) && (!$cap_viewownstamps)) {
+            continue;
+        }
+        if (($s->userid != $USER->id) && (!$cap_viewotherstamps)) {
+            continue;
+        }
         $userstamps[$s->userid][] = $s; 
     }
     unset($allstamps);
     unset($s);
     
-    if ((!isteacher($course->id)) && ($stampcoll->publish == STAMPCOLL_PUBLISH_SELFONLY)) {
+    if (($cap_viewonlyownstamps) || (($cap_viewsomestamps) && ($view == 'own')))  {
+        /// Display a page with own stamps only
         if (isset($userstamps[$USER->id])) {
             $mystamps = $userstamps[$USER->id];
         } else {
@@ -70,46 +96,30 @@
         }
         unset($s);
 
-        print_simple_box_start('center', '70%');
-
+        print_box_start();
         print_heading(get_string('numberofyourstamps', 'stampcoll', count($mystamps)));
         echo '<div class="stamppictures">'.$stampimages.'</div>';
-
-        print_simple_box_end();
+        print_box_end();
         
-    }
-    
-    if ((isteacher($course->id)) || ($stampcoll->publish == STAMPCOLL_PUBLISH_ALL)) {
-        /// Check to see if groups are being used in this stampcoll
-        if ($groupmode = groupmode($course, $cm)) {   // Groups are being used
-            $currentgroup = setup_and_print_groups($course, $groupmode, "view.php?id=$cm->id");
-        } else {
-            $currentgroup = false;
-        }
-
-        if ($currentgroup) {
-            $users = get_group_users($currentgroup, "u.firstname ASC", '', 'u.id, u.picture, u.firstname, u.lastname');
-        } else {
-            $users = get_course_users($course->id, "u.firstname ASC", '', 'u.id, u.picture, u.firstname, u.lastname') + get_admins();
-        }
-
+    } elseif ($cap_viewotherstamps) {
+        /// Display a table of users and their stamps
+        groups_print_activity_menu($cm, 'view.php?page='.$page.'&amp;id='.$cm->id);
+        $currentgroup = groups_get_activity_group($cm);
+        $users = stampcoll_get_users_can_collect($cm, $context, $currentgroup);
         if (!$users) {
             print_heading(get_string("nousersyet"));
         }
 
-
         /// First we check to see if the form has just been submitted
         /// to request user_preference updates
         if (isset($_POST['updatepref'])){
-            $perpage = optional_param('perpage', 30, PARAM_INT);
-            $perpage = ($perpage <= 0) ? 30 : $perpage ;
+            $perpage = optional_param('perpage', STAMPCOLL_USERS_PER_PAGE, PARAM_INT);
+            $perpage = ($perpage <= 0) ? STAMPCOLL_USERS_PER_PAGE : $perpage ;
             set_user_preference('stampcoll_perpage', $perpage);
         }
 
         /// Next we get perpage param from database
-        $perpage    = get_user_preferences('stampcoll_perpage', 30);
-        
-        $page = optional_param('page', 0, PARAM_INT);
+        $perpage    = get_user_preferences('stampcoll_perpage', STAMPCOLL_USERS_PER_PAGE);
 
         $tablecolumns = array('picture', 'fullname', 'count', 'stamps');
         $tableheaders = array('', get_string('fullname'), get_string('numberofstamps', 'stampcoll'), '');
@@ -140,16 +150,6 @@
 
         $table->setup();
 
-        if (!$stampcoll->teachercancollect) {
-            $teachers = get_course_teachers($course->id);
-            if (!empty($teachers)) {
-                $keys = array_keys($teachers);
-            }
-            foreach ($keys as $key) {
-                unset($users[$key]);
-            }
-        }
-        
         if (empty($users)) {
             print_heading(get_string('nousers','stampcoll'));
             return true;
@@ -160,8 +160,6 @@
         if ($where = $table->get_sql_where()) {
             $where .= ' AND ';
         }
-
-        
         
         if ($sort = $table->get_sql_sort()) {
             $sort = ' ORDER BY '.$sort;

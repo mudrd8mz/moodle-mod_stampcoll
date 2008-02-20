@@ -64,7 +64,10 @@
         notice(get_string('notallowedtoviewstamps', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
 
-    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
+    $allstamps = stampcoll_get_stamps($stampcoll->id)
+        or $allstamps = array();
+
+    if (empty($allstamps) && !$stampcoll->displayzero) {
         notice(get_string('nostampsyet', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
     

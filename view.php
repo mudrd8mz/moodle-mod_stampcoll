@@ -29,7 +29,6 @@
         notice(get_string("activityiscurrentlyhidden"));
     }
 
-    $stampimage = stampcoll_image($stampcoll->id);
     $strstampcoll = get_string("modulename", "stampcoll");
     $strstampcolls = get_string("modulenameplural", "stampcoll");
 
@@ -95,7 +94,7 @@
         unset($userstamps);
         $stampimages = '';
         foreach ($mystamps as $s) {
-            $stampimages .= stampcoll_linktostampdetails($s->id, $stampimage, $s->comment);
+            $stampimages .= stampcoll_stamp($s, $stampcoll->image);
         }
         unset($s);
 
@@ -188,7 +187,7 @@
                 $stamps = '';
                 if (isset($userstamps[$auser->id])) {
                     foreach ($userstamps[$auser->id] as $s) {
-                        $stamps .= stampcoll_linktostampdetails($s->id, $stampimage, $s->comment);
+                        $stamps .= stampcoll_stamp($s, $stampcoll->image);
                     }
                     unset($s);
                 }

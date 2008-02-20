@@ -48,7 +48,6 @@
         exit;
     }
     
-    $stampimage = stampcoll_image($stampcoll->id);
     $strstampcoll = get_string("modulename", "stampcoll");
     $strstampcolls = get_string("modulenameplural", "stampcoll");
 
@@ -153,7 +152,7 @@
         print_box_end();
 
         print_box_start('delstampbox');
-        echo '<div class="picture">'.$stampimage.'</div>';
+        echo '<div class="picture">'.stampcoll_stamp($stamp, $stampcoll->image).'</div>';
         echo '<div class="comment">'.format_text($stamp->comment).'</div>';
         echo '<div class="timemodified">'.get_string('timemodified', 'stampcoll').': '.
                                                 userdate($stamp->timemodified).'</div>';

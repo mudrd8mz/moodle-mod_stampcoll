@@ -7,6 +7,11 @@
  */
 define('STAMPCOLL_USERS_PER_PAGE', 30);
 
+/**
+ * Default stamp image URL
+ */
+define('STAMPCOLL_IMAGE_URL', $CFG->wwwroot.'/mod/stampcoll/defaultstamp.gif');
+
 
 /// MODULE FUNCTIONS //////////////////////////////////////////////////////
 
@@ -194,48 +199,50 @@ function stampcoll_get_stamp($stampid) {
     return get_record("stampcoll_stamps", "id", $stampid);
 }
 
+
 /**
- * Generate HTML to print the stamp image.
+ * Return HTML displaying the hoverable stamp image.
  *
- * @uses $CFG
- * @uses $course Is this a hack?
- * @param int $stampcollid ID of an module instance
- * @return string HTML tag to print the stamp image
- * @todo Maybe replace global $course by $COURSE
+ * @param int $stamp The stamp object
+ * @param string $image The value of stampcollection image
+ * @param bool $tooltip Show stamp details when mouse hover
+ * @param bool $anonymous Hide the author of the stamp
+ * @return string HTML code displaying the image
  */
-function stampcoll_image($stampcollid, $alt="") {
-    global $CFG, $course;
-    $sc = stampcoll_get_stampcoll($stampcollid);
-    $tag = '<img border="0" src="';
-    if(empty($sc->image) || $sc->image == "default") {
-        $tag .= "$CFG->wwwroot/mod/stampcoll/defaultstamp.gif";
+function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
+    global $CFG, $COURSE;
+
+    if(empty($image) || $image == 'default') {
+        $src = STAMPCOLL_IMAGE_URL;
     } else {
         if ($CFG->slasharguments) {
-        $tag .= "$CFG->wwwroot/file.php/$course->id/$sc->image";
-
+            $src = $CFG->wwwroot . '/file.php/' . $COURSE->id . '/' . $image;
         } else {
-            $tag .= "$CFG->wwwroot/file.php?file=/$course->id/$sc->image";
+            $src = $CFG->wwwroot . '/file.php?file=/' . $COURSE->id . '/' . $image;
         }
     }
-    $tag .= '" alt="'.$alt.'"';
-    $tag .= ' />';
-    return $tag;
+    $alt = get_string('stampimage', 'stampcoll');
+    $date = userdate($stamp->timemodified);
+    if ($tooltip && !$anonymous) {
+        /// XXX TODO Do not use userid but authorid (or givenby) field
+        $author = fullname(get_record('user', 'id', $stamp->userid, '', '', '', '', 'lastname,firstname')). '<br />';
+        $author = get_string('givenby', 'stampcoll', $author);
+    } else {
+        $author = '';
+    }
+    $caption = $author . $date;
+    $comment = format_text($stamp->comment);
+    $tooltip_start = '<a class="stampimagewrapper" href="javascript:void(0);"
+                         onmouseover="return overlib(\'' . $comment . '\', CAPTION, \'' . $caption . '\' );" 
+                         onmouseout="nd();">';
+    $tooltip_end = '</a>';
+    $img = '<img class="stampimage" src="' . $src . '" alt="'. $alt .'" />';
+
+    if ($tooltip) {
+        return $tooltip_start . $img . $tooltip_end;
+    } else {
+        return $img;
+    }
 }
-
-
-/**
- * Generate HTML link to popup new windows with stamp details.
- *
- * @param int $stampid ID of an stamp
- * @param string $linkname Text to be displayed as web link
- * @return string HTML to print the link
- */
-function stampcoll_linktostampdetails($stampid, $linkname='click here', $title='') {
-    $title = strip_tags($title);
-    $title = str_replace("\"", "`", $title);
-    $title = str_replace("'", "`", $title);
-    return link_to_popup_window("/mod/stampcoll/popupcomment.php?id=$stampid", 'popup', $linkname, 250, 400, $title, 'none', true);
-}
-
 
 ?>

@@ -5,6 +5,7 @@ $string['confirmdel'] = 'Do you really want to delete this stamp?';
 $string['deletestamp'] = 'Delete stamp';
 $string['displayzero'] = 'Display users with no stamps';
 $string['editstamps'] = 'Edit stamps';
+$string['givenby'] = 'Given by $a';
 $string['modulenameplural'] = 'Stamp Collections';
 $string['modulename'] = 'Stamp Collection';
 $string['nostampscollected'] = 'No stamps collected';

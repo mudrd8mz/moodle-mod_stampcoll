@@ -62,17 +62,20 @@
 
 /// Submit any new data if there is any
 
-    if ($form = data_submitted()) {
+    if (($form = data_submitted()) && $cap_givestamps ) {
         if (isset($form->addstamp) and $form->addstamp == '1') {
             if (!isset($form->sesskey) || !confirm_sesskey($form->sesskey)) {
                 error('Sesskey error');
             }
             $newstamp->stampcollid = $stampcoll->id;
             $newstamp->userid = $form->userid;
-            if (!isset($form->comment)) {
-                $form->comment = '';
+            if (!isset($form->text)) {
+                $form->text = '';
             }
-            $newstamp->comment = $form->comment;
+            if (empty($stampcoll->anonymous)) {
+                $newstamp->giver = $USER->id;
+            }
+            $newstamp->text = $form->text;
             $newstamp->timemodified = time();
             
             if (! $newstamp->id = insert_record("stampcoll_stamps", $newstamp)) {
@@ -86,11 +89,14 @@
             if (!isset($form->sesskey) || !confirm_sesskey($form->sesskey)) {
                 error('Sesskey error');
             }
-            $updatedstamp->id = $form->stampid;
-            if (!isset($form->comment)) {
-                $form->comment = '';
+            $updatedstamp = stampcoll_get_stamp($form->stampid);
+            if (!($cap_managestamps || $updatedstamp->giver == $USER->id)) {
+                error('You are not allowed to update this stamp');
             }
-            $updatedstamp->comment = $form->comment;
+            if (!isset($form->text)) {
+                $form->text = '';
+            }
+            $updatedstamp->text = $form->text;
             $updatedstamp->timemodified = time();
             
             if (! update_record("stampcoll_stamps", $updatedstamp)) {
@@ -102,9 +108,9 @@
             exit;
         }
         if (isset($form->deletestamp)) {
-            //
-            // TODO check mod/stampcoll:deletestamps, if not allowed, do not display the delete icon
-            //
+            if (! $cap_managestamps) {
+                error('You are not allowed to managestamps');
+            }
             if (!isset($form->sesskey) || !confirm_sesskey($form->sesskey)) {
                 error('Sesskey error');
             }
@@ -126,7 +132,7 @@
 
 /// Should be a stamp deleted?
 
-    if (isset($_GET['d'])) {
+    if (isset($_GET['d']) && $cap_managestamps) {
         if (!isset($_GET['sesskey']) || !confirm_sesskey($_GET['sesskey'])) {
             error('Sesskey error');
         }
@@ -153,7 +159,7 @@
 
         print_box_start('delstampbox');
         echo '<div class="picture">'.stampcoll_stamp($stamp, $stampcoll->image).'</div>';
-        echo '<div class="comment">'.format_text($stamp->comment).'</div>';
+        echo '<div class="comment">'.format_text($stamp->text).'</div>';
         echo '<div class="timemodified">'.get_string('timemodified', 'stampcoll').': '.
                                                 userdate($stamp->timemodified).'</div>';
         print_box_end();
@@ -192,7 +198,11 @@
     $table->define_headers($tableheaders);
     $table->define_baseurl($CFG->wwwroot.'/mod/stampcoll/editstamps.php?id='.$cm->id.'&amp;currentgroup='.$currentgroup);
 
-    $table->sortable(true);
+    $table->sortable(true, 'lastname'); // default sort - do not use "count" here!
+    if (!$cap_viewotherstamps) {
+        // prevent sorting by stamps count and so guessing the number of them
+        $table->no_sorting('count');
+    }
     $table->collapsible(false);
     $table->initialbars(true);
 
@@ -239,9 +249,15 @@
         foreach ($ausers as $auser) {
             $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
             $fullname = fullname($auser);
-            $count = $auser->count;
+            $count = '';
+            if ($auser->id == $USER->id && $cap_viewownstamps) {
+                $count = $auser->count;
+            }
+            if ($auser->id != $USER->id && $cap_viewotherstamps) {
+                $count = $auser->count;
+            }
             $comment = '<form name="addform" action="editstamps.php?id='.$cm->id.'" method="post">';
-            $comment .= '<input name="comment" type="text" size="35" maxlength="250" />';
+            $comment .= '<input name="text" type="text" size="35" maxlength="250" />';
             $comment .= '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
             $comment .= '<input type="hidden" name="userid" value="'.$auser->id.'" />';
             $comment .= '<input type="hidden" name="page" value="'.$page.'" />';
@@ -250,19 +266,30 @@
             $row = array($picture, $fullname, $count, $comment);
             $table->add_data($row);
 
-            if ($showupdateforms && isset($userstamps[$auser->id])) {
+            if ($cap_viewotherstamps &&  $showupdateforms && isset($userstamps[$auser->id])) {
                 foreach ($userstamps[$auser->id] as $userstamp) {
-                    $count = '<a href="editstamps.php?id='.$cm->id.'&amp;d='.$userstamp->id.'&amp;sesskey='.sesskey().'&amp;page='.$page.'" title="'.get_string('deletestamp', 'stampcoll').'">';
-                    $count .= '<img src="'.$CFG->pixpath.'/t/delete.gif" height="11" width="11" border="0" alt="'.get_string('deletestamp', 'stampcoll').'" /></a>';                                                      
-                    $count .= '&nbsp;&nbsp;<span class="timemodified">'.userdate($userstamp->timemodified).'</span>';
+                    $count = '<span class="timemodified">'.userdate($userstamp->timemodified).'</span>&nbsp;';
+                    $count .= link_to_popup_window($CFG->wwwroot.'/mod/stampcoll/popupcomment.php?id='.$userstamp->id,
+                        'popup', '<img src="'. $CFG->pixpath.'/t/preview.gif'.'" height="11" width="11" border="0"
+                                     alt="'.get_string('viewstamps', 'stampcoll').'" />', 250, 400, '', 'none', true);
+                    $count .= '&nbsp;';
+                    if ($cap_managestamps) {
+                        $count .= '<a href="editstamps.php?id='.$cm->id.'&amp;d='.$userstamp->id.'&amp;sesskey='.sesskey().'&amp;page='.$page.'" title="'.get_string('deletestamp', 'stampcoll').'">';
+                        $count .= '<img src="'.$CFG->pixpath.'/t/delete.gif" height="11" width="11" border="0" alt="'.get_string('deletestamp', 'stampcoll').'" />';
+                        $count .= '</a>&nbsp;&nbsp;';
+                    }
 
-                    $comment = '<form name="updateform" action="editstamps.php?id='.$cm->id.'" method="post">';
-                    $comment .= '<input name="comment" type="text" size="35" maxlength="250" value="'.$userstamp->comment.'" />';
-                    $comment .= '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
-                    $comment .= '<input type="hidden" name="stampid" value="'.$userstamp->id.'" />';
-                    $comment .= '<input type="hidden" name="page" value="'.$page.'" />';
-                    $comment .= '<input type="hidden" name="updatestamp" value="1" />';
-                    $comment .= '<input type="submit" value="'.get_string('updatestampbutton', 'stampcoll').'" /></form>';
+                    if ($cap_managestamps || ($userstamp->giver == $USER->id)) {
+                        $comment = '<form name="updateform" action="editstamps.php?id='.$cm->id.'" method="post">';
+                        $comment .= '<input name="text" type="text" size="35" maxlength="250" value="' . format_string($userstamp->text) . '" />';
+                        $comment .= '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
+                        $comment .= '<input type="hidden" name="stampid" value="'.$userstamp->id.'" />';
+                        $comment .= '<input type="hidden" name="page" value="'.$page.'" />';
+                        $comment .= '<input type="hidden" name="updatestamp" value="1" />';
+                        $comment .= '<input type="submit" value="'.get_string('updatestampbutton', 'stampcoll').'" /></form>';
+                    } else {
+                        $comment = format_string($userstamp->text);
+                    }
                     $row = array($picture, $fullname, $count, $comment);
                     $table->add_data($row);
                 }

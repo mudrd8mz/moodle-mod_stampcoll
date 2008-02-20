@@ -32,7 +32,7 @@
             error("You are not allowed to view this information");
     }
     
-    $stampimage = stampcoll_image($stampcoll->id);
+    $stampimage = stampcoll_stamp($stamp, $stampcoll->image);
 
     add_to_log($course->id, "stampcoll", "view stamp", "popupcomment.php?id=$id", $stamp->userid, '');
 
@@ -41,7 +41,7 @@
     print_box_start();
 
     echo '<div class="picture">'.$stampimage.'</div>';
-    echo '<div class="comment">'.format_text($stamp->comment).'</div>';
+    echo '<div class="comment">'.format_text($stamp->text).'</div>';
     echo '<div class="timemodified">'.get_string('timemodified', 'stampcoll').': '.userdate($stamp->timemodified).'</div>';
     
     print_box_end();

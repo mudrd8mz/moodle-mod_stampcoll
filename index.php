@@ -45,7 +45,7 @@
         include(dirname(__FILE__).'/caps.php');
 
         if (! $cap_viewsomestamps) {
-            $count_mystamps = get_string('stampsarenotpublic', 'stampcoll');
+            $count_mystamps = get_string('notallowedtoviewstamps', 'stampcoll');
         } else {
             if (! $allstamps = stampcoll_get_stamps($stampcoll->id)) {
                 $allstamps = array();
@@ -86,7 +86,7 @@
         }
 
         if (! $cap_viewsomestamps) {
-            $aa = get_string('stampsarenotpublic', 'stampcoll');
+            $aa = get_string('notallowedtoviewstamps', 'stampcoll');
         } else {
             $aa = '';
             if ($cap_viewownstamps) {

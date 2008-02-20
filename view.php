@@ -21,8 +21,12 @@
         error("Course module is incorrect");
     }
 
+/// Get capabilities
+    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    include(dirname(__FILE__).'/caps.php');
+
 /// If it's hidden then don't show anything
-    if (empty($cm->visible) and !isteacher($course->id)) {
+    if (empty($cm->visible) && !has_capability('moodle/course:viewhiddenactivities', $context)) {
         $navigation = build_navigation('', $cm);
         print_header_simple(format_string($stampcoll->name), "",
                  $navigation, "", "", true, '', navmenu($course, $cm));
@@ -38,10 +42,6 @@
     print_header_simple(format_string($stampcoll->name), "",
                   $navigation, "", "", true,
                   update_module_button($cm->id, $course->id, $strstampcoll), navmenu($course, $cm));
-
-/// Get capabilities
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-    include(dirname(__FILE__).'/caps.php');
 
     if ($cap_viewonlyownstamps && $view == 'all') {
         $view = 'own';
@@ -67,7 +67,7 @@
         or $allstamps = array();
 
     if (empty($allstamps) && !$stampcoll->displayzero) {
-        notice(get_string('nostampsyet', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
+        notice(get_string('nostampsincollection', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
     
 /// Re-sort all stamps into "by-user-array"

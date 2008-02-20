@@ -74,7 +74,7 @@ $mod_stampcoll_capabilities = array(
         )
     ),
 
-    'mod/stampcoll:deletestamps' => array(
+    'mod/stampcoll:managestamps' => array(
 
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,

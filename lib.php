@@ -16,11 +16,11 @@ define('STAMPCOLL_IMAGE_URL', $CFG->wwwroot.'/mod/stampcoll/defaultstamp.gif');
 /// MODULE FUNCTIONS //////////////////////////////////////////////////////
 
 /**
- * @todo Documenting this function
+ * @todo Documenting this function. Capabilities checking
  */
 function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
     if ($stamps = get_records_select("stampcoll_stamps", "userid=$user->id AND stampcollid=$stampcoll->id")) {
-        $result->info = get_string("numberofcollectedstamps", "stampcoll").": ".count($stamps);
+        $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
         $result->time = 0;  // empty
         return $result;
     }
@@ -31,45 +31,47 @@ function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
  * @todo Documenting this function
  */
 function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
-    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
-        // no stamps yet in this instance
-        if ($stampcoll->publish == STAMPCOLL_PUBLISH_NONE) {
-            echo get_string("stampsarenotpublic", "stampcoll");
-            return true;
-        } else { 
-            echo get_string("nostampscollected", "stampcoll");
+    
+    global $USER;
+
+    $context = get_context_instance(CONTEXT_MODULE, $mod->id); 
+    if ($USER->id == $user->id) {
+        if (!has_capability('mod/stampcoll:viewownstamps', $context)) {
+            echo get_string('notallowedtoviewstamps', 'stampcoll');
             return true;
         }
+    } else {
+        if (!has_capability('mod/stampcoll:viewotherstamps', $context)) {
+            echo get_string('notallowedtoviewstamps', 'stampcoll');
+            return true;
+        }
+    }
+
+    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
+        // no stamps yet in this instance
+        echo get_string('nostampscollected', "stampcoll");
+        return true;
     }
 
     $userstamps = array();
     foreach ($allstamps as $s) {
-        $userstamps[$s->userid][] = $s;
+        if ($s->userid == $user->id) {
+            $userstamps[] = $s;
+        }
     }
     unset($allstamps);
     unset($s);
 
-    if ((isteacher($course->id)) || ($stampcoll->publish <> STAMPCOLL_PUBLISH_NONE)) {
-        if (isset($userstamps[$user->id])) {
-            $mystamps = $userstamps[$user->id];
-        } else {
-            $mystamps = array();
-        }
-        unset($userstamps);
-        $stampimage = stampcoll_image($stampcoll->id);
-        $stampimages = format_text(get_string("numberofcollectedstamps", "stampcoll").": ".count($mystamps));
-        foreach ($mystamps as $s) {
-            $stampimages .= '<li>';
-            $link = userdate($s->timemodified). ' ';
-            $stampimages .= stampcoll_linktostampdetails($s->id, $link);
-            $stampimages .= format_text($s->comment);
-            $stampimages .= '</li>';
-        }
-        unset($s);
-
-        echo '<div class="stamppictures">'.$stampimages.'</div>';
+    if (empty($userstamps)) {
+        echo get_string('nostampscollected', 'stampcoll');
     } else {
-        echo get_string("nostamps", "stampcoll");
+        echo get_string('numberofcollectedstamps', 'stampcoll', count($userstamps));
+        echo '<div class="stamppictures">';
+        foreach ($userstamps as $s) {
+            echo stampcoll_stamp($s, $stampcoll->image);
+        }
+        echo '</div>';
+        unset($s);
     }
 }
 
@@ -223,15 +225,20 @@ function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
     }
     $alt = get_string('stampimage', 'stampcoll');
     $date = userdate($stamp->timemodified);
-    if ($tooltip && !$anonymous) {
-        /// XXX TODO Do not use userid but authorid (or givenby) field
-        $author = fullname(get_record('user', 'id', $stamp->userid, '', '', '', '', 'lastname,firstname')). '<br />';
+    if (!empty($stamp->giver) && $tooltip && !$anonymous) {
+        $author = fullname(get_record('user', 'id', $stamp->giver, '', '', '', '', 'lastname,firstname')). '<br />';
         $author = get_string('givenby', 'stampcoll', $author);
     } else {
         $author = '';
     }
-    $caption = $author . $date;
-    $comment = format_text($stamp->comment);
+    if ($tooltip) {
+        $recepient = fullname(get_record('user', 'id', $stamp->userid, '', '', '', '', 'lastname,firstname')). '<br />';
+        $recepient = get_string('givento', 'stampcoll', $recepient);
+    } else {
+        $recepient = '';
+    }
+    $caption = $author . $recepient . $date;
+    $comment = format_string($stamp->text);
     $tooltip_start = '<a class="stampimagewrapper" href="javascript:void(0);"
                          onmouseover="return overlib(\'' . $comment . '\', CAPTION, \'' . $caption . '\' );" 
                          onmouseout="nd();">';
@@ -241,7 +248,7 @@ function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
     if ($tooltip) {
         return $tooltip_start . $img . $tooltip_end;
     } else {
-        return $img;
+        return $popup;
     }
 }
 

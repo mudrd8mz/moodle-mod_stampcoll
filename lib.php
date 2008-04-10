@@ -20,6 +20,7 @@ define('STAMPCOLL_IMAGE_URL', $CFG->wwwroot.'/mod/stampcoll/defaultstamp.gif');
  */
 function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
     if ($stamps = get_records_select("stampcoll_stamps", "userid=$user->id AND stampcollid=$stampcoll->id")) {
+        $result = new stdClass();
         $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
         $result->time = 0;  // empty
         return $result;
@@ -214,7 +215,8 @@ function stampcoll_get_stamp($stampid) {
 function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
     global $CFG, $COURSE;
 
-    if(empty($image) || $image == 'default') {
+    $image_location = $CFG->dataroot . '/'. $COURSE->id . '/'. $image;
+    if (empty($image) || $image == 'default' || !file_exists($image_location)) {
         $src = STAMPCOLL_IMAGE_URL;
     } else {
         if ($CFG->slasharguments) {

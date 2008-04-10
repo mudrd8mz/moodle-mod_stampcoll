@@ -25,7 +25,7 @@
  */
 
     /**
-     * Backup all module instances
+     * Backup all selected module instances
      *
      * Iterates thru all stamp collections; for each it checks if the one is 
      * included in the backup and calls stampcoll_backup_one_mod().

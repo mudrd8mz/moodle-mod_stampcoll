@@ -7,6 +7,7 @@
  */
 
 require_once ($CFG->dirroot.'/course/moodleform_mod.php');
+require_once ($CFG->dirroot.'/lib/filelib.php');
 
 class mod_stampcoll_mod_form extends moodleform_mod {
 

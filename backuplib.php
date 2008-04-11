@@ -35,7 +35,6 @@
      * @return boolean True if success, False if failure
      */
     function stampcoll_backup_mods($bf, $preferences) {
-        global $CFG;
         $status = true;
         $stampcolls = get_records('stampcoll', 'course', $preferences->backup_course, 'id');
         foreach ($stampcolls as $stampcoll) {
@@ -55,7 +54,6 @@
      * @return boolean True if success, False if failure
      */
     function stampcoll_backup_one_mod($bf, $preferences, $stampcoll) {
-        global $CFG;
         if (is_numeric($stampcoll)) {
             $stampcoll = get_record('stampcoll', 'id', $stampcoll);
         }
@@ -94,7 +92,6 @@
      * @return boolean True if success, False if failure
      */
     function stampcoll_backup_collected_stamps($bf, $preferences, $stampcollid) {
-        global $CFG;
         $status = true;
         $stamps = get_records('stampcoll_stamps', 'stampcollid', $stampcollid, 'id');
         $status = $status && fwrite($bf, start_tag('COLLECTEDSTAMPS', 4, true));
@@ -195,6 +192,7 @@
     /**
      * Returns an array of collected stamps ids in the given course
      *
+     * @uses $CFG
      * @param int $course Course ID
      * @return array Array of records
      */

@@ -254,4 +254,16 @@ function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
     }
 }
 
+
+/**
+ * Returns installed module version
+ *
+ * @return int Version defined in the module's version.php
+ */
+function stampcoll_modversion() {
+    require(dirname(__FILE__).'/version.php');
+    return $module->version;
+}
+
+
 ?>

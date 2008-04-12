@@ -24,6 +24,8 @@
  * @package mod/stampcoll
  */
 
+require_once(dirname(__FILE__).'/lib.php');
+
     /**
      * Backup all selected module instances
      *
@@ -62,6 +64,7 @@
 
         $status = $status && fwrite($bf, full_tag('ID', 4, false, $stampcoll->id));
         $status = $status && fwrite($bf, full_tag('MODTYPE', 4, false, 'stampcoll'));
+        $status = $status && fwrite($bf, full_tag('MODVERSION', 4, false, stampcoll_modversion()));
         $status = $status && fwrite($bf, full_tag('NAME', 4, false, $stampcoll->name));
         $status = $status && fwrite($bf, full_tag('TEXT', 4, false, $stampcoll->text));
         $status = $status && fwrite($bf, full_tag('FORMAT', 4, false, $stampcoll->format));

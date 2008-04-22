@@ -24,6 +24,8 @@
  * @package mod/stampcoll
  */
 
+require_once(dirname(__FILE__).'/lib.php');
+
     /**
      * Restore the module
      *

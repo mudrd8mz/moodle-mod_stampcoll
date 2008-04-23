@@ -44,7 +44,7 @@ require_once(dirname(__FILE__).'/lib.php');
             //get completed xmlized object
             $info = $data->info;
             //if necessary, write to restorelog and adjust date/time fields
-            if ($restore->course_startdateoffset) {
+            if (!empty($restore->course_startdateoffset)) {
                 restore_log_date_changes('Stamp collection', $restore, $info['MOD']['#'], array('TIMEMODIFIED'));
             }
             //traverse_xmlize($info);                                                                    //Debug
@@ -60,7 +60,23 @@ require_once(dirname(__FILE__).'/lib.php');
             $stampcoll->image = backup_todb($info['MOD']['#']['IMAGE']['0']['#']);
             $stampcoll->timemodified = backup_todb($info['MOD']['#']['TIMEMODIFIED']['0']['#']);
             $stampcoll->displayzero = backup_todb($info['MOD']['#']['DISPLAYZERO']['0']['#']);
-            $stampcoll->anonymous = backup_todb($info['MOD']['#']['ANONYMOUS']['0']['#']);
+
+            // following was added in Moodle 1.9. If it is not present, consider stampcoll as anonymous
+            // (we did not keep the giver id pre 1.9)
+            if (isset($info['MOD']['#']['ANONYMOUS']['0']['#'])) {
+                $stampcoll->anonymous = backup_todb($info['MOD']['#']['ANONYMOUS']['0']['#']);
+            } else {
+                $stampcoll->anonymous = 1;
+            }
+
+            //following two fields get dropped in Moodle 1.9. Therefore they might or not be there
+            //depending on whether we are restoring a 1.8 or 1.9 backup
+            if (isset($info['MOD']['#']['PUBLISH']['0']['#'])) {
+                $stampcoll->publish = backup_todb($info['MOD']['#']['PUBLISH']['0']['#']);
+            }
+            if (isset($info['MOD']['#']['TEACHERCANCOLLECT']['0']['#'])) {
+                $stampcoll->teachercancollect = backup_todb($info['MOD']['#']['TEACHERCANCOLLECT']['0']['#']);
+            }
 
             //the structure is equal to the db now, so insert the stampcoll
             $newid = insert_record('stampcoll', $stampcoll);
@@ -78,6 +94,51 @@ require_once(dirname(__FILE__).'/lib.php');
                 //check if user wants to restore user data and do it
                 if (restore_userdata_selected($restore, 'stampcoll', $mod->id)) {
                     $status = stampcoll_restore_collected_stamps($mod->id, $newid, $info, $restore);
+                }
+
+                // if the backup was made in 1.8, we need to convert PUBLISH and TEACHERCANCOLLECT into
+                // local role overrides
+                if (isset($stampcoll->publish) && isset($stampcoll->teachercancollect)) {
+
+                    $cmid = $restore->mods['stampcoll']->instances[$mod->id]->restored_as_course_module;
+                    $context = get_context_instance(CONTEXT_MODULE, $cmid);
+
+                    if (!$editingteacherroles = get_roles_with_capability('moodle/legacy:editingteacher', CAP_ALLOW)) {
+                          notice('Default editing teacher role was not found. Roles and permissions '.
+                                 'for the stampcoll module will have to be manually set.');
+                    }
+                    if (!$teacherroles = get_roles_with_capability('moodle/legacy:teacher', CAP_ALLOW)) {
+                          notice('Default teacher role was not found. Roles and permissions '.
+                                 'for the stampcoll module will have to be manually set.');
+                    }
+                    if (!$studentroles = get_roles_with_capability('moodle/legacy:student', CAP_ALLOW)) {
+                          notice('Default student role was not found. Roles and permissions '.
+                                 'for the stampcoll module will have to be manually set.');
+                    }
+
+                    // collection with publish set to STAMPCOLL_PUBLISH_NONE
+                    if ($stampcoll->publish == 0) {
+                        // prevent students from viewing own stamps
+                        foreach ($studentroles as $studentrole) {
+                            assign_capability('mod/stampcoll:viewownstamps', CAP_PREVENT, $studentrole->id, $context->id);
+                        }
+                    }
+                    // collection with publish set to STAMPCOLL_PUBLISH_ALL
+                    if ($stampcoll->publish == 2) {
+                        // allow students to view others' stamps
+                        foreach ($studentroles as $studentrole) {
+                            assign_capability('mod/stampcoll:viewotherstamps', CAP_ALLOW, $studentrole->id, $context->id);
+                        }
+                    }
+                    // collection which allows teachers to collect stamps
+                    if ($stampcoll->teachercancollect == 1) {
+                        foreach ($editingteacherroles as $teacherrole) {
+                            assign_capability('mod/stampcoll:collectstamps', CAP_ALLOW, $teacherrole->id, $context->id);
+                        }
+                        foreach ($teacherroles as $teacherrole) {
+                            assign_capability('mod/stampcoll:collectstamps', CAP_ALLOW, $teacherrole->id, $context->id);
+                        }
+                    }
                 }
             } else {
                 // insert_record() failed
@@ -120,7 +181,13 @@ require_once(dirname(__FILE__).'/lib.php');
             //we'll need this later
             $oldid = backup_todb($stamp_info['#']['ID']['0']['#']);
             $olduserid = backup_todb($stamp_info['#']['USERID']['0']['#']);
-            $oldgiverid = backup_todb($stamp_info['#']['GIVER']['0']['#']);
+
+            // giver id was added in 1.9. Zero means the stamp was given in the anonymous mode
+            if (isset($stamp_info['#']['GIVER']['0']['#'])) {
+                $oldgiverid = backup_todb($stamp_info['#']['GIVER']['0']['#']);
+            } else {
+                $oldgiverid = 0;
+            }
 
             //build the record structure
             $stamp = new stdClass();

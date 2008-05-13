@@ -8,7 +8,7 @@
  * @package mod/stampcoll
  */
 
-    if (empty($currenttab) or empty($stampcoll) or empty($course) or empty($context)) {
+    if (empty($currenttab) or empty($stampcoll) or empty($context) or empty($cm)) {
         die('You cannot call this script in that way');
     }
     $inactive = NULL;

@@ -268,10 +268,7 @@
 
             if ($cap_viewotherstamps &&  $showupdateforms && isset($userstamps[$auser->id])) {
                 foreach ($userstamps[$auser->id] as $userstamp) {
-                    $count = '<span class="timemodified">'.userdate($userstamp->timemodified).'</span>&nbsp;';
-                    $count .= link_to_popup_window($CFG->wwwroot.'/mod/stampcoll/popupcomment.php?id='.$userstamp->id,
-                        'popup', '<img src="'. $CFG->pixpath.'/t/preview.gif'.'" height="11" width="11" border="0"
-                                     alt="'.get_string('viewstamps', 'stampcoll').'" />', 250, 400, '', 'none', true);
+                    $count = stampcoll_stamp($userstamp, '', true, false, $CFG->pixpath.'/t/preview.gif');
                     $count .= '&nbsp;';
                     if ($cap_managestamps) {
                         $count .= '<a href="editstamps.php?id='.$cm->id.'&amp;d='.$userstamp->id.'&amp;sesskey='.sesskey().'&amp;page='.$page.'" title="'.get_string('deletestamp', 'stampcoll').'">';

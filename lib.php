@@ -207,17 +207,22 @@ function stampcoll_get_stamp($stampid) {
  * Return HTML displaying the hoverable stamp image.
  *
  * @param int $stamp The stamp object
- * @param string $image The value of stampcollection image
+ * @param string $image The value of stampcollection image or absolute path to the file
  * @param bool $tooltip Show stamp details when mouse hover
  * @param bool $anonymous Hide the author of the stamp
+ * @param string $imagaeurl Optional: use <img scr="$imageurl"> instead of $image
  * @return string HTML code displaying the image
  */
-function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false) {
+function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false, $imageurl=null) {
     global $CFG, $COURSE;
 
     $image_location = $CFG->dataroot . '/'. $COURSE->id . '/'. $image;
     if (empty($image) || $image == 'default' || !file_exists($image_location)) {
-        $src = STAMPCOLL_IMAGE_URL;
+        if ($imageurl) {
+            $src = $imageurl;
+        } else {
+            $src = STAMPCOLL_IMAGE_URL;
+        }
     } else {
         if ($CFG->slasharguments) {
             $src = $CFG->wwwroot . '/file.php/' . $COURSE->id . '/' . $image;

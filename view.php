@@ -170,32 +170,34 @@
         $select = 'SELECT u.id, u.firstname, u.lastname, u.picture, COUNT(s.id) AS count ';
         $sql = 'FROM '.$CFG->prefix.'user AS u '.
                'LEFT JOIN '.$CFG->prefix.'stampcoll_stamps s ON u.id = s.userid AND s.stampcollid = '.$stampcoll->id.' '.
-               'WHERE '.$where.'u.id IN ('.implode(',', array_keys($users)).') GROUP BY u.id, u.firstname, u.lastname, u.picture ';
+               'WHERE '.$where.'u.id IN ('.implode(',', array_keys($users)).') '.
+               'GROUP BY u.id, u.firstname, u.lastname, u.picture ';
 
         if (!$stampcoll->displayzero) {
             $sql .= 'HAVING COUNT(s.id) > 0 ';
         }
 
-        $table->pagesize($perpage, count($users));
-        
-        if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
-            
-            foreach ($ausers as $auser) {
-                $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
-                $fullname = fullname($auser);
-                $count = $auser->count;
-                $stamps = '';
-                if (isset($userstamps[$auser->id])) {
-                    foreach ($userstamps[$auser->id] as $s) {
-                        $stamps .= stampcoll_stamp($s, $stampcoll->image);
+        // First query with not limits to get the number of returned rows
+        if (($ausers = get_records_sql($select.$sql.$sort)) !== false) {
+            $table->pagesize($perpage, count($ausers));
+            // Second query with pagination limits
+            if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
+                foreach ($ausers as $auser) {
+                    $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
+                    $fullname = fullname($auser);
+                    $count = $auser->count;
+                    $stamps = '';
+                    if (isset($userstamps[$auser->id])) {
+                        foreach ($userstamps[$auser->id] as $s) {
+                            $stamps .= stampcoll_stamp($s, $stampcoll->image);
+                        }
+                        unset($s);
                     }
-                    unset($s);
+                    $row = array($picture, $fullname, $count, $stamps);
+                    $table->add_data($row);
                 }
-                $row = array($picture, $fullname, $count, $stamps);
-                $table->add_data($row);
             }
-        }
-        
+        } 
         $table->print_html();  /// Print the whole table
         
         /// Mini form for setting user preference

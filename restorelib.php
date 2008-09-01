@@ -168,6 +168,11 @@ require_once(dirname(__FILE__).'/lib.php');
 
         $status = true;
 
+        if (empty($info['MOD']['#']['COLLECTEDSTAMPS'])) {
+            // no stamps in the backup
+            return true;
+        }
+
         //Get the stamps array
         $stamps = $info['MOD']['#']['COLLECTEDSTAMPS']['0']['#']['STAMP'];
 

@@ -97,19 +97,21 @@ require_once(dirname(__FILE__).'/lib.php');
     function stampcoll_backup_collected_stamps($bf, $preferences, $stampcollid) {
         $status = true;
         $stamps = get_records('stampcoll_stamps', 'stampcollid', $stampcollid, 'id');
-        $status = $status && fwrite($bf, start_tag('COLLECTEDSTAMPS', 4, true));
-        foreach ($stamps as $stamp) {
-            $status = $status && fwrite($bf, start_tag('STAMP', 5, true));
+        if (is_array($stamps)) {
+            $status = $status && fwrite($bf, start_tag('COLLECTEDSTAMPS', 4, true));
+            foreach ($stamps as $stamp) {
+                $status = $status && fwrite($bf, start_tag('STAMP', 5, true));
 
-            $status = $status && fwrite($bf, full_tag('ID', 6, false, $stamp->id));
-            $status = $status && fwrite($bf, full_tag('USERID', 6, false, $stamp->userid));
-            $status = $status && fwrite($bf, full_tag('GIVER', 6, false, $stamp->giver));
-            $status = $status && fwrite($bf, full_tag('TEXT', 6, false, $stamp->text));
-            $status = $status && fwrite($bf, full_tag('TIMEMODIFIED', 6, false, $stamp->timemodified));
+                $status = $status && fwrite($bf, full_tag('ID', 6, false, $stamp->id));
+                $status = $status && fwrite($bf, full_tag('USERID', 6, false, $stamp->userid));
+                $status = $status && fwrite($bf, full_tag('GIVER', 6, false, $stamp->giver));
+                $status = $status && fwrite($bf, full_tag('TEXT', 6, false, $stamp->text));
+                $status = $status && fwrite($bf, full_tag('TIMEMODIFIED', 6, false, $stamp->timemodified));
             
-            $status = $status && fwrite($bf, end_tag('STAMP', 5, true));
+                $status = $status && fwrite($bf, end_tag('STAMP', 5, true));
+            }
+            $status = $status && fwrite($bf, end_tag('COLLECTEDSTAMPS', 4, true));
         }
-        $status = $status && fwrite($bf, end_tag('COLLECTEDSTAMPS', 4, true));
         return $status;
     }
  

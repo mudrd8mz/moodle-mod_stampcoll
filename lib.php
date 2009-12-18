@@ -247,7 +247,7 @@ function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false, $im
     $caption = $author . $recepient . $date;
     $comment = format_string($stamp->text);
     $tooltip_start = '<a class="stampimagewrapper" href="javascript:void(0);"
-                         onmouseover="return overlib(\'' . $comment . '\', CAPTION, \'' . $caption . '\' );" 
+                         onmouseover="return overlib(\'' . s($comment) . '\', CAPTION, \'' . s($caption) . '\' );"
                          onmouseout="nd();">';
     $tooltip_end = '</a>';
     $img = '<img class="stampimage" src="' . $src . '" alt="'. $alt .'" />';

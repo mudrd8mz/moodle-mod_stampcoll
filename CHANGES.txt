@@ -1,0 +1,6 @@
+08/02/2008
+==========
+* removed field 'introformat'
+* removed field 'publish' - controlled by roles
+* removed field 'teachercancollect' - controlled by roles
+

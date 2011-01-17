@@ -8,20 +8,20 @@
 define('STAMPCOLL_USERS_PER_PAGE', 30);
 
 /**
- * Some obsolete configuration constants. These are kept here for backward compatibility and upgrade process.
+ * Default stamp image URL
  */
-define('STAMPCOLL_PUBLISH_NONE',    '0');
-define('STAMPCOLL_PUBLISH_SELFONLY',    '1');
-define('STAMPCOLL_PUBLISH_ALL',         '2');
+define('STAMPCOLL_IMAGE_URL', $CFG->wwwroot.'/mod/stampcoll/defaultstamp.gif');
+
 
 /// MODULE FUNCTIONS //////////////////////////////////////////////////////
 
 /**
- * @todo Documenting this function
+ * @todo Documenting this function. Capabilities checking
  */
 function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
     if ($stamps = get_records_select("stampcoll_stamps", "userid=$user->id AND stampcollid=$stampcoll->id")) {
-        $result->info = get_string("numberofcollectedstamps", "stampcoll").": ".count($stamps);
+        $result = new stdClass();
+        $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
         $result->time = 0;  // empty
         return $result;
     }
@@ -32,45 +32,47 @@ function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
  * @todo Documenting this function
  */
 function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
-    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
-        // no stamps yet in this instance
-        if ($stampcoll->publish == STAMPCOLL_PUBLISH_NONE) {
-            echo get_string("stampsarenotpublic", "stampcoll");
-            return true;
-        } else { 
-            echo get_string("nostampscollected", "stampcoll");
+    
+    global $USER;
+
+    $context = get_context_instance(CONTEXT_MODULE, $mod->id); 
+    if ($USER->id == $user->id) {
+        if (!has_capability('mod/stampcoll:viewownstamps', $context)) {
+            echo get_string('notallowedtoviewstamps', 'stampcoll');
             return true;
         }
+    } else {
+        if (!has_capability('mod/stampcoll:viewotherstamps', $context)) {
+            echo get_string('notallowedtoviewstamps', 'stampcoll');
+            return true;
+        }
+    }
+
+    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
+        // no stamps yet in this instance
+        echo get_string('nostampscollected', "stampcoll");
+        return true;
     }
 
     $userstamps = array();
     foreach ($allstamps as $s) {
-        $userstamps[$s->userid][] = $s;
+        if ($s->userid == $user->id) {
+            $userstamps[] = $s;
+        }
     }
     unset($allstamps);
     unset($s);
 
-    if ((isteacher($course->id)) || ($stampcoll->publish <> STAMPCOLL_PUBLISH_NONE)) {
-        if (isset($userstamps[$user->id])) {
-            $mystamps = $userstamps[$user->id];
-        } else {
-            $mystamps = array();
-        }
-        unset($userstamps);
-        $stampimage = stampcoll_image($stampcoll->id);
-        $stampimages = format_text(get_string("numberofcollectedstamps", "stampcoll").": ".count($mystamps));
-        foreach ($mystamps as $s) {
-            $stampimages .= '<li>';
-            $link = userdate($s->timemodified). ' ';
-            $stampimages .= stampcoll_linktostampdetails($s->id, $link);
-            $stampimages .= format_text($s->comment);
-            $stampimages .= '</li>';
-        }
-        unset($s);
-
-        echo '<div class="stamppictures">'.$stampimages.'</div>';
+    if (empty($userstamps)) {
+        echo get_string('nostampscollected', 'stampcoll');
     } else {
-        echo get_string("nostamps", "stampcoll");
+        echo get_string('numberofcollectedstamps', 'stampcoll', count($userstamps));
+        echo '<div class="stamppictures">';
+        foreach ($userstamps as $s) {
+            echo stampcoll_stamp($s, $stampcoll->image);
+        }
+        echo '</div>';
+        unset($s);
     }
 }
 
@@ -200,47 +202,72 @@ function stampcoll_get_stamp($stampid) {
     return get_record("stampcoll_stamps", "id", $stampid);
 }
 
+
 /**
- * Generate HTML to print the stamp image.
+ * Return HTML displaying the hoverable stamp image.
  *
- * @uses $CFG
- * @uses $course Is this a hack?
- * @param int $stampcollid ID of an module instance
- * @return string HTML tag to print the stamp image
- * @todo Maybe replace global $course by $COURSE
+ * @param int $stamp The stamp object
+ * @param string $image The value of stampcollection image or absolute path to the file
+ * @param bool $tooltip Show stamp details when mouse hover
+ * @param bool $anonymous Hide the author of the stamp
+ * @param string $imagaeurl Optional: use <img scr="$imageurl"> instead of $image
+ * @return string HTML code displaying the image
  */
-function stampcoll_image($stampcollid, $alt="") {
-    global $CFG, $course;
-    $sc = stampcoll_get_stampcoll($stampcollid);
-    $tag = '<img border="0" src="';
-    if(empty($sc->image) || $sc->image == "default") {
-        $tag .= "$CFG->wwwroot/mod/stampcoll/defaultstamp.gif";
+function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false, $imageurl=null) {
+    global $CFG, $COURSE;
+
+    $image_location = $CFG->dataroot . '/'. $COURSE->id . '/'. $image;
+    if (empty($image) || $image == 'default' || !file_exists($image_location)) {
+        if ($imageurl) {
+            $src = $imageurl;
+        } else {
+            $src = STAMPCOLL_IMAGE_URL;
+        }
     } else {
         if ($CFG->slasharguments) {
-        $tag .= "$CFG->wwwroot/file.php/$course->id/$sc->image";
-
+            $src = $CFG->wwwroot . '/file.php/' . $COURSE->id . '/' . $image;
         } else {
-            $tag .= "$CFG->wwwroot/file.php?file=/$course->id/$sc->image";
+            $src = $CFG->wwwroot . '/file.php?file=/' . $COURSE->id . '/' . $image;
         }
     }
-    $tag .= '" alt="'.$alt.'"';
-    $tag .= ' />';
-    return $tag;
+    $alt = get_string('stampimage', 'stampcoll');
+    $date = userdate($stamp->timemodified);
+    if (!empty($stamp->giver) && $tooltip && !$anonymous) {
+        $author = fullname(get_record('user', 'id', $stamp->giver, '', '', '', '', 'lastname,firstname')). '<br />';
+        $author = get_string('givenby', 'stampcoll', $author);
+    } else {
+        $author = '';
+    }
+    if ($tooltip) {
+        $recepient = fullname(get_record('user', 'id', $stamp->userid, '', '', '', '', 'lastname,firstname')). '<br />';
+        $recepient = get_string('givento', 'stampcoll', $recepient);
+    } else {
+        $recepient = '';
+    }
+    $caption = $author . $recepient . $date;
+    $comment = format_string($stamp->text);
+    $tooltip_start = '<a class="stampimagewrapper" href="javascript:void(0);"
+                         onmouseover="return overlib(\'' . s($comment) . '\', CAPTION, \'' . s($caption) . '\' );"
+                         onmouseout="nd();">';
+    $tooltip_end = '</a>';
+    $img = '<img class="stampimage" src="' . $src . '" alt="'. $alt .'" />';
+
+    if ($tooltip) {
+        return $tooltip_start . $img . $tooltip_end;
+    } else {
+        return $popup;
+    }
 }
 
 
 /**
- * Generate HTML link to popup new windows with stamp details.
+ * Returns installed module version
  *
- * @param int $stampid ID of an stamp
- * @param string $linkname Text to be displayed as web link
- * @return string HTML to print the link
+ * @return int Version defined in the module's version.php
  */
-function stampcoll_linktostampdetails($stampid, $linkname='click here', $title='') {
-    $title = strip_tags($title);
-    $title = str_replace("\"", "`", $title);
-    $title = str_replace("'", "`", $title);
-    return link_to_popup_window("/mod/stampcoll/popupcomment.php?id=$stampid", 'popup', $linkname, 250, 400, $title, 'none', true);
+function stampcoll_modversion() {
+    require(dirname(__FILE__).'/version.php');
+    return $module->version;
 }
 
 

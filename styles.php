@@ -44,19 +44,6 @@
   text-align: center;
 }
 
-#mod-stampcoll-popupcomment .generalbox {
-  text-align: center;
-  background-color: white;
-}
-
-#mod-stampcoll-popupcomment .comment {
-  padding: 10px;
-}
-
-#mod-stampcoll-popupcomment .timemodified, .timemodified {
-  font-size: x-small;
-}
-
 #mod-stampcoll-editstamps .content,
 {
   padding: 10px;

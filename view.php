@@ -21,15 +21,18 @@
         error("Course module is incorrect");
     }
 
+/// Get capabilities
+    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    include(dirname(__FILE__).'/caps.php');
+
 /// If it's hidden then don't show anything
-    if (empty($cm->visible) and !isteacher($course->id)) {
+    if (empty($cm->visible) && !has_capability('moodle/course:viewhiddenactivities', $context)) {
         $navigation = build_navigation('', $cm);
         print_header_simple(format_string($stampcoll->name), "",
                  $navigation, "", "", true, '', navmenu($course, $cm));
         notice(get_string("activityiscurrentlyhidden"));
     }
 
-    $stampimage = stampcoll_image($stampcoll->id);
     $strstampcoll = get_string("modulename", "stampcoll");
     $strstampcolls = get_string("modulenameplural", "stampcoll");
 
@@ -39,10 +42,6 @@
     print_header_simple(format_string($stampcoll->name), "",
                   $navigation, "", "", true,
                   update_module_button($cm->id, $course->id, $strstampcoll), navmenu($course, $cm));
-
-/// Get capabilities
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-    include(dirname(__FILE__).'/caps.php');
 
     if ($cap_viewonlyownstamps && $view == 'all') {
         $view = 'own';
@@ -64,8 +63,11 @@
         notice(get_string('notallowedtoviewstamps', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
 
-    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
-        notice(get_string('nostampsyet', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
+    $allstamps = stampcoll_get_stamps($stampcoll->id)
+        or $allstamps = array();
+
+    if (empty($allstamps) && !$stampcoll->displayzero) {
+        notice(get_string('nostampsincollection', 'stampcoll'), $CFG->wwwroot."/course/view.php?id=$course->id");
     }
     
 /// Re-sort all stamps into "by-user-array"
@@ -92,7 +94,7 @@
         unset($userstamps);
         $stampimages = '';
         foreach ($mystamps as $s) {
-            $stampimages .= stampcoll_linktostampdetails($s->id, $stampimage, $s->comment);
+            $stampimages .= stampcoll_stamp($s, $stampcoll->image);
         }
         unset($s);
 
@@ -103,7 +105,7 @@
         
     } elseif ($cap_viewotherstamps) {
         /// Display a table of users and their stamps
-        groups_print_activity_menu($cm, 'view.php?page='.$page.'&amp;id='.$cm->id);
+        groups_print_activity_menu($cm, $CFG->wwwroot.'/mod/stampcol/view.php?page='.$page.'&amp;id='.$cm->id);
         $currentgroup = groups_get_activity_group($cm);
         $users = stampcoll_get_users_can_collect($cm, $context, $currentgroup);
         if (!$users) {
@@ -168,32 +170,34 @@
         $select = 'SELECT u.id, u.firstname, u.lastname, u.picture, COUNT(s.id) AS count ';
         $sql = 'FROM '.$CFG->prefix.'user AS u '.
                'LEFT JOIN '.$CFG->prefix.'stampcoll_stamps s ON u.id = s.userid AND s.stampcollid = '.$stampcoll->id.' '.
-               'WHERE '.$where.'u.id IN ('.implode(',', array_keys($users)).') GROUP BY u.id, u.firstname, u.lastname, u.picture ';
+               'WHERE '.$where.'u.id IN ('.implode(',', array_keys($users)).') '.
+               'GROUP BY u.id, u.firstname, u.lastname, u.picture ';
 
         if (!$stampcoll->displayzero) {
             $sql .= 'HAVING COUNT(s.id) > 0 ';
         }
 
-        $table->pagesize($perpage, count($users));
-        
-        if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
-            
-            foreach ($ausers as $auser) {
-                $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
-                $fullname = fullname($auser);
-                $count = $auser->count;
-                $stamps = '';
-                if (isset($userstamps[$auser->id])) {
-                    foreach ($userstamps[$auser->id] as $s) {
-                        $stamps .= stampcoll_linktostampdetails($s->id, $stampimage, $s->comment);
+        // First query with not limits to get the number of returned rows
+        if (($ausers = get_records_sql($select.$sql.$sort)) !== false) {
+            $table->pagesize($perpage, count($ausers));
+            // Second query with pagination limits
+            if (($ausers = get_records_sql($select.$sql.$sort, $table->get_page_start(), $table->get_page_size())) !== false) {
+                foreach ($ausers as $auser) {
+                    $picture = print_user_picture($auser->id, $course->id, $auser->picture, false, true);
+                    $fullname = fullname($auser);
+                    $count = $auser->count;
+                    $stamps = '';
+                    if (isset($userstamps[$auser->id])) {
+                        foreach ($userstamps[$auser->id] as $s) {
+                            $stamps .= stampcoll_stamp($s, $stampcoll->image);
+                        }
+                        unset($s);
                     }
-                    unset($s);
+                    $row = array($picture, $fullname, $count, $stamps);
+                    $table->add_data($row);
                 }
-                $row = array($picture, $fullname, $count, $stamps);
-                $table->add_data($row);
             }
-        }
-        
+        } 
         $table->print_html();  /// Print the whole table
         
         /// Mini form for setting user preference

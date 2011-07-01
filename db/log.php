@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,17 +16,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Stamp collection module version
+ * Definition of log events
  *
  * @package    mod
  * @subpackage stampcoll
- * @copyright  2007 David Mudrak <david@moodle.com>
+ * @copyright  2011 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$module->version    = 2011070105;
-$module->requires   = 2011033002;
-$module->cron       = 0;
-$module->component  = 'mod_stampcoll';
+$logs = array(
+    array('module' => 'stampcoll', 'action' => 'view',         'mtable' => 'stampcoll', 'field' => 'name'),
+    array('module' => 'stampcoll', 'action' => 'update',       'mtable' => 'stampcoll', 'field' => 'name'),
+    array('module' => 'stampcoll', 'action' => 'add',          'mtable' => 'stampcoll', 'field' => 'name'),
+    array('module' => 'stampcoll', 'action' => 'update stamp', 'mtable' => 'user',      'field' => 'concat(firstname, \' \', lastname)'),
+    array('module' => 'stampcoll', 'action' => 'delete stamp', 'mtable' => 'user',      'field' => 'concat(firstname, \' \', lastname)'),
+);

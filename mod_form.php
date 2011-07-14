@@ -1,61 +1,77 @@
-<?php // $Id$
+<?php
+
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file defines the main stampcoll module form
+ * This file defines the main Stamp collection module setting form
  *
- * See http://docs.moodle.org/en/Development:lib/formslib.php
+ * @package    mod
+ * @subpackage stampcoll
+ * @copyright  2008 David Mudrak <david@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once ($CFG->dirroot.'/course/moodleform_mod.php');
-require_once ($CFG->dirroot.'/lib/filelib.php');
+defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/course/moodleform_mod.php');
+require_once($CFG->dirroot.'/lib/filelib.php');
+
+/**
+ * Stamp collection module setting form
+ */
 class mod_stampcoll_mod_form extends moodleform_mod {
 
-	function definition() {
+    /**
+     * Defines the form
+     */
+    public function definition() {
+        global $CFG, $COURSE;
 
-        global $CFG;
-		global $COURSE;
-		$mform    =& $this->_form;
+        $mform = $this->_form;
 
-//-- General --------------------------------------------------------------------
+        // General -------------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
-    /// name 
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'60'));
-		$mform->setType('name', PARAM_TEXT);
-		$mform->addRule('name', null, 'required', null, 'client');
-    /// text (description)
-    	$mform->addElement('htmleditor', 'text', get_string('description'));
-		$mform->setType('text', PARAM_RAW);
-		//$mform->addRule('text', get_string('required'), 'required', null, 'client');
-        $mform->setHelpButton('text', array('writing', 'richtext'), false, 'editorhelpbutton');
-    /// introformat
-        $mform->addElement('format', 'introformat', get_string('format'));
-//-- Stamp Collection------------------------------------------------------------
+
+        // Name
+        $mform->addElement('text', 'name', get_string('name'), array('size'=>'64'));
+        $mform->setType('name', PARAM_TEXT);
+        $mform->addRule('name', null, 'required', null, 'client');
+        $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
+
+        // Description
+        $this->add_intro_editor(false);
+
+        // Stamp collection ----------------------------------------------------
         $mform->addElement('header', 'stampcollection', get_string('modulename', 'stampcoll'));
-    /// stampimage
-        make_upload_directory("$COURSE->id");    // Just in case
-        $images = array();
-        $coursefiles = get_directory_list("$CFG->dataroot/$COURSE->id", $CFG->moddata);
-        foreach ($coursefiles as $filename) {
-            if (mimeinfo("icon", $filename) == "image.gif") {
-                $images["$filename"] = $filename;
-            }
-        }
-        $mform->addElement('select', 'image', get_string('stampimage', 'stampcoll'), 
-                                    array_merge(array(''=>get_string('default')), $images),'a','b','c','d');
+
+        // Stamp image
+        $maxbytes = get_max_upload_file_size($CFG->maxbytes, $COURSE->maxbytes);
+        $mform->setMaxFileSize($maxbytes);
+        $mform->addElement('filepicker', 'image', get_string('stampimage', 'stampcoll'));
+
         $mform->addElement('static', 'stampimageinfo', '', get_string('stampimageinfo', 'stampcoll') );
-    /// displayzero
+
+        // Display users with no stamps
         $mform->addElement('selectyesno', 'displayzero', get_string('displayzero', 'stampcoll'));
         $mform->setDefault('displayzero', 0);
- 
-//-------------------------------------------------------------------------------
-        // add standard elements, common to all modules
-		$this->standard_coursemodule_elements();
-//-------------------------------------------------------------------------------
-        // add standard buttons, common to all modules
+
+        // Common module settings ----------------------------------------------
+        $this->standard_coursemodule_elements();
+
+        // Buttons -------------------------------------------------------------
         $this->add_action_buttons();
-
-	}
+    }
 }
-
-?>

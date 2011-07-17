@@ -1,40 +1,160 @@
-<?php // $Id$
+<?php
 
-/// MODULE CONSTANTS //////////////////////////////////////////////////////
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Default number of students per page
+ * Library of interface functions and constants for module stampcoll
+ *
+ * All the core Moodle functions, neeeded to allow the module to work
+ * in Moodle should be placed here.
+ *
+ * @package    mod
+ * @subpackage stampcoll
+ * @copyright  2007 David Mudrak <david@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-define('STAMPCOLL_USERS_PER_PAGE', 30);
+
+defined('MOODLE_INTERNAL') || die();
+
+////////////////////////////////////////////////////////////////////////////////
+// Moodle core API                                                            //
+////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Default stamp image URL
+ * Returns the information on whether the module supports a feature
+ *
+ * @see plugin_supports() in lib/moodlelib.php
+ * @param string $feature FEATURE_xx constant for requested feature
+ * @return mixed true if the feature is supported, null if unknown
  */
-define('STAMPCOLL_IMAGE_URL', $CFG->wwwroot.'/mod/stampcoll/defaultstamp.gif');
+function stampcoll_supports($feature) {
 
-
-/// MODULE FUNCTIONS //////////////////////////////////////////////////////
+    switch($feature) {
+        case FEATURE_MOD_INTRO:         return true;
+        case FEATURE_GROUPS:            return true;
+        case FEATURE_GRADE_HAS_GRADE:   return false;
+        default:                        return null;
+    }
+}
 
 /**
- * @todo Documenting this function. Capabilities checking
+ * Creates a new instance of the stamp collection and returns its id
+ *
+ * @param object $stampcoll object containing data defined by the mod_form.php
+ * @param mod_stampcoll_mod_form $mform
+ * @return int id of the new instance
+ */
+function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
+    global $DB;
+
+    $cmid    = $stampcoll->coursemodule;
+    $context = get_context_instance(CONTEXT_MODULE, $cmid);
+
+    $stampcoll->timemodified = time();
+
+    // save the new record into the database and reload it
+    $newid = $DB->insert_record('stampcoll', $stampcoll);
+
+    // process the eventual image in the filepicker
+    $filename = $mform->get_new_filename('image');
+    if ($filename !== false) {
+        $fs = get_file_storage();
+        $fs->delete_area_files($context->id, 'mod_stampcoll', 'image');
+        $mform->save_stored_file('image', $context->id, 'mod_stampcoll', 'image', 0, '/', $filename);
+        $DB->set_field('stampcoll', 'image', $filename, array('id' => $newid));
+
+    } else {
+        // todo put the default image into the filepool
+    }
+
+    return $newid;
+}
+
+/**
+ * Updates an existing instance of stamp collection with new data
+ *
+ * @param object $stampcoll object containing data defined by the mod_form.php
+ * @param mod_stampcoll_mod_form $mform
+ * @return boolean
+ */
+function stampcoll_update_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
+    global $DB;
+
+    $stampcoll->id = $stampcoll->instance;
+    $stampcoll->timemodified = time();
+
+    // todo deal with stamp image on update
+    unset($stampcoll->image);
+
+    return $DB->update_record('stampcoll', $stampcoll);
+}
+
+/**
+ * Deletes the instance of stamp collection and any data that depends on it
+ *
+ * @param int $id of an instance to be deleted
+ * @return bool
+ */
+function stampcoll_delete_instance($id) {
+    global $DB;
+
+    if (! $stampcoll = $DB->get_record('stampcoll', array('id' => $id))) {
+        return false;
+    }
+
+    $DB->delete_records('stampcoll_stamps', array('stampcollid' => $stampcoll->id));
+    $DB->delete_records('stampcoll', array('id' => $stampcoll->id));
+
+    return true;
+}
+
+/**
+ * Returns a small object with summary information about what a
+ * user has done with a given particular instance of this module
+ * Used for user activity reports.
+ * $return->time = the time they did it
+ * $return->info = a short text description
+ *
+ * @return stdClass|null
  */
 function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
-    if ($stamps = get_records_select("stampcoll_stamps", "userid=$user->id AND stampcollid=$stampcoll->id")) {
+    global $DB;
+
+    if ($stamps = $DB->get_records_select('stampcoll_stamps', 'userid=? AND stamcollid=?', array($user->id, $stampcoll->id))) {
         $result = new stdClass();
         $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
         $result->time = 0;  // empty
         return $result;
     }
-    return NULL;
+    return null;
 }
 
 /**
- * @todo Documenting this function
+ * Prints a detailed representation of what a user has done with
+ * a given particular instance of this module, for user activity reports.
+ *
+ * @todo rewrite
+ * @return string HTML
  */
 function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
-    
     global $USER;
 
+    return '';
+
+    /*
     $context = get_context_instance(CONTEXT_MODULE, $mod->id); 
     if ($USER->id == $user->id) {
         if (!has_capability('mod/stampcoll:viewownstamps', $context)) {
@@ -74,56 +194,52 @@ function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
         echo '</div>';
         unset($s);
     }
+     */
 }
 
 /**
- * Create a new instance of stamp collection and return the id number. 
+ * Given a course and a time, this module should find recent activity
+ * that has occurred in stampcoll activities and print it out.
+ * Return true if there was output, or false is there was none.
  *
- * @param object $stampcoll Object containing data defined by the form in mod.html
- * @return int ID number of the new instance
- */
-function stampcoll_add_instance($stampcoll) {
-    $stampcoll->timemodified = time();
-    $stampcoll->text = trim($stampcoll->text);
-    return insert_record("stampcoll", $stampcoll);
-}
-
-/**
- * Update an existing instance of stamp collection with new data.
- *
- * @param object $stampcoll Object containing data defined by the form in mod.html
  * @return boolean
  */
-function stampcoll_update_instance($stampcoll) {
-    $stampcoll->id = $stampcoll->instance;
-    $stampcoll->timemodified = time();
-    $stampcoll->text = trim($stampcoll->text);
-    return update_record('stampcoll', $stampcoll);
+function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
+    return false;  //  True if anything was printed, otherwise false
 }
 
+/**
+ * Returns all activity in stampcolls since a given time
+ *
+ * @param array $activities sequentially indexed array of objects
+ * @param int $index
+ * @param int $timestart
+ * @param int $courseid
+ * @param int $cmid
+ * @param int $userid defaults to 0
+ * @param int $groupid defaults to 0
+ * @return void adds items into $activities and increases $index
+ */
+function stampcoll_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0) {
+}
 
 /**
- * Delete the instance of stamp collection and any data that depends on it.
+ * Prints single activity item prepared by {@see stampcoll_get_recent_mod_activity()}
  *
- * @param int $id ID of an instance to be deleted
- * @return bool
+ * @return void
  */
-function stampcoll_delete_instance($id) {
-    if (! $stampcoll = get_record("stampcoll", "id", "$id")) {
-        return false;
-    }
+function stampcoll_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
+}
 
-    $result = true;
-
-    if (! delete_records("stampcoll_stamps", "stampcollid", "$stampcoll->id")) {
-        $result = false;
-    }
-
-    if (! delete_records("stampcoll", "id", "$stampcoll->id")) {
-        $result = false;
-    }
-
-    return $result;
+/**
+ * Function to be run periodically according to the moodle cron
+ * This function searches for things that need to be done, such
+ * as sending out mail, toggling flags etc ...
+ *
+ * @return boolean
+ */
+function stampcoll_cron () {
+    return true;
 }
 
 /**
@@ -146,129 +262,109 @@ function stampcoll_get_participants($stampcollid) {
 }
 
 /**
- * Get all users who can collect stamps in the given Stamp Collection
+ * Returns all other caps used in the module
  *
- * Returns array of users with the capability mod/stampcoll:collectstamps. Caller may specify the group.
- * If groupmembersonly used, do not return users who are not in any group.
- *
- * @uses $CFG;
- * @param object $cm Course module record
- * @param object $context Current context
- * @param int $currentgroup ID of group the users must be in
- * @return array Array of users
+ * @return array
  */
-function stampcoll_get_users_can_collect($cm, $context, $currentgroup=false) {
-    global $CFG;
-    $users = get_users_by_capability($context, 'mod/stampcoll:collectstamps', 'u.id,u.picture,u.firstname,u.lastname',
-                        '', '', '', $currentgroup, '', false, true);
+function stampcoll_get_extra_capabilities() {
+    return array('moodle/site:accessallgroups');
+}
 
-    /// If groupmembersonly used, remove users who are not in any group
-    /// XXX this has not been tested yet !!!
-    if ($users && !empty($CFG->enablegroupings) && $cm->groupmembersonly) {
-        if ($groupingusers = groups_get_grouping_members($cm->groupingid, 'u.id,u.picture,u.firstname,u.lastname' )) {
-            $users = array_intersect($users, $groupingusers);
+////////////////////////////////////////////////////////////////////////////////
+// File API                                                                   //
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Returns the lists of all browsable file areas within the given module context
+ *
+ * The file area stampcoll_intro for the activity introduction field is added automatically
+ * by {@link file_browser::get_file_info_context_module()}
+ *
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param stdClass $context
+ * @return array of [(string)filearea] => (string)description
+ */
+function stampcoll_get_file_areas($course, $cm, $context) {
+    return array('image' => get_string('filearea_image', 'stampcoll'));
+}
+
+/**
+ * Serves the files from the stampcoll file areas
+ *
+ * @param stdClass $course
+ * @param stdClass $cm
+ * @param stdClass $context
+ * @param string $filearea
+ * @param array $args
+ * @param bool $forcedownload
+ * @return void this should never return to the caller
+ */
+function stampcoll_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload) {
+    global $DB, $CFG;
+
+    if ($context->contextlevel != CONTEXT_MODULE) {
+        send_file_not_found();
+    }
+
+    require_login($course, true, $cm);
+
+    if (!has_capability('mod/stampcoll:view', $context)) {
+        send_file_not_found();
+    }
+
+    if ($filearea === 'image') {
+        $relativepath = implode('/', $args);
+        $fullpath = "/$context->id/mod_stampcoll/$filearea/$relativepath";
+
+        $fs = get_file_storage();
+        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+            send_file_not_found();
         }
+
+        $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
+
+        // finally send the file
+        send_stored_file($file, $lifetime, 0);
     }
-    return $users;
+
+    send_file_not_found();
 }
 
-/**
- * Return full record of the stamp collection.
- *
- * @param int $stampcallid ID of an module instance
- * @return object Object containing instance data
- */
-function stampcoll_get_stampcoll($stampcollid) {
-    return get_record("stampcoll", "id", $stampcollid);
-}
+////////////////////////////////////////////////////////////////////////////////
+// Navigation API                                                             //
+////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Return all stamps in module instance.
+ * Extends the global navigation tree by adding stampcoll nodes if there is a relevant content
  *
- * @param int $stamcallid ID of an module instance
- * @return array|false Array of found stamps (as objects) or false if no stamps or error occured
- */
-function stampcoll_get_stamps($stampcollid) {
-    return get_records("stampcoll_stamps", "stampcollid", $stampcollid, "id");
-}
-
-/**
- * Return one stamp.
+ * This can be called by an AJAX request so do not rely on $PAGE as it might not be set up properly.
  *
- * @param int $stamid ID of an stamp record
- * @return object|false Found stamp (as object) or false if not such stamp or error occured
+ * @param navigation_node $navref An object representing the navigation tree node of the stampcoll module instance
+ * @param stdClass $course
+ * @param stdClass $module
+ * @param cm_info $cm
  */
-function stampcoll_get_stamp($stampid) {
-    return get_record("stampcoll_stamps", "id", $stampid);
-}
+function stampcoll_extend_navigation(navigation_node $navref, stdclass $course, stdclass $module, cm_info $cm) {
 
+    $context            = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $canviewownstamps   = has_capability('mod/stampcoll:viewownstamps', $context);
+    $canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
 
-/**
- * Return HTML displaying the hoverable stamp image.
- *
- * @param int $stamp The stamp object
- * @param string $image The value of stampcollection image or absolute path to the file
- * @param bool $tooltip Show stamp details when mouse hover
- * @param bool $anonymous Hide the author of the stamp
- * @param string $imagaeurl Optional: use <img scr="$imageurl"> instead of $image
- * @return string HTML code displaying the image
- */
-function stampcoll_stamp($stamp, $image='', $tooltip=true, $anonymous=false, $imageurl=null) {
-    global $CFG, $COURSE;
-
-    $image_location = $CFG->dataroot . '/'. $COURSE->id . '/'. $image;
-    if (empty($image) || $image == 'default' || !file_exists($image_location)) {
-        if ($imageurl) {
-            $src = $imageurl;
-        } else {
-            $src = STAMPCOLL_IMAGE_URL;
-        }
-    } else {
-        if ($CFG->slasharguments) {
-            $src = $CFG->wwwroot . '/file.php/' . $COURSE->id . '/' . $image;
-        } else {
-            $src = $CFG->wwwroot . '/file.php?file=/' . $COURSE->id . '/' . $image;
-        }
-    }
-    $alt = get_string('stampimage', 'stampcoll');
-    $date = userdate($stamp->timemodified);
-    if (!empty($stamp->giver) && $tooltip && !$anonymous) {
-        $author = fullname(get_record('user', 'id', $stamp->giver, '', '', '', '', 'lastname,firstname')). '<br />';
-        $author = get_string('givenby', 'stampcoll', $author);
-    } else {
-        $author = '';
-    }
-    if ($tooltip) {
-        $recepient = fullname(get_record('user', 'id', $stamp->userid, '', '', '', '', 'lastname,firstname')). '<br />';
-        $recepient = get_string('givento', 'stampcoll', $recepient);
-    } else {
-        $recepient = '';
-    }
-    $caption = $author . $recepient . $date;
-    $comment = format_string($stamp->text);
-    $tooltip_start = '<a class="stampimagewrapper" href="javascript:void(0);"
-                         onmouseover="return overlib(\'' . s($comment) . '\', CAPTION, \'' . s($caption) . '\' );"
-                         onmouseout="nd();">';
-    $tooltip_end = '</a>';
-    $img = '<img class="stampimage" src="' . $src . '" alt="'. $alt .'" />';
-
-    if ($tooltip) {
-        return $tooltip_start . $img . $tooltip_end;
-    } else {
-        return $popup;
+    if ($canviewownstamps and $canviewotherstamps) {
+        $url = new moodle_url('/mod/stampcoll/view.php', array('id' => $cm->id, 'view' => 'own'));
+        $ownstamps = $navref->add(get_string('ownstamps', 'stampcoll'), $url);
     }
 }
 
-
 /**
- * Returns installed module version
+ * Extends the settings navigation with the stampcoll settings
  *
- * @return int Version defined in the module's version.php
+ * This function is called when the context for the page is a stampcoll module. This is not called by AJAX
+ * so it is safe to rely on the $PAGE.
+ *
+ * @param settings_navigation $settingsnav {@link settings_navigation}
+ * @param navigation_node $stampcollnode {@link navigation_node}
  */
-function stampcoll_modversion() {
-    require(dirname(__FILE__).'/version.php');
-    return $module->version;
+function stampcoll_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $stampcollnode=null) {
 }
-
-
-?>

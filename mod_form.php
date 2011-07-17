@@ -38,7 +38,7 @@ class mod_stampcoll_mod_form extends moodleform_mod {
      * Defines the form
      */
     public function definition() {
-        global $CFG, $COURSE;
+        global $COURSE;
 
         $mform = $this->_form;
 
@@ -58,9 +58,8 @@ class mod_stampcoll_mod_form extends moodleform_mod {
         $mform->addElement('header', 'stampcollection', get_string('modulename', 'stampcoll'));
 
         // Stamp image
-        $maxbytes = get_max_upload_file_size($CFG->maxbytes, $COURSE->maxbytes);
-        $mform->setMaxFileSize($maxbytes);
-        $mform->addElement('filepicker', 'image', get_string('stampimage', 'stampcoll'));
+        $imageoptions = array('accepted_types' => array('image'), 'maxbytes' => $COURSE->maxbytes);
+        $mform->addElement('filepicker', 'image', get_string('stampimage', 'stampcoll'), '', $imageoptions);
 
         $mform->addElement('static', 'stampimageinfo', '', get_string('stampimageinfo', 'stampcoll') );
 

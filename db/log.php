@@ -30,6 +30,7 @@ $logs = array(
     array('module' => 'stampcoll', 'action' => 'view',         'mtable' => 'stampcoll', 'field' => 'name'),
     array('module' => 'stampcoll', 'action' => 'update',       'mtable' => 'stampcoll', 'field' => 'name'),
     array('module' => 'stampcoll', 'action' => 'add',          'mtable' => 'stampcoll', 'field' => 'name'),
+    array('module' => 'stampcoll', 'action' => 'add stamp',    'mtable' => 'user',      'field' => 'concat(firstname, \' \', lastname)'),
     array('module' => 'stampcoll', 'action' => 'update stamp', 'mtable' => 'user',      'field' => 'concat(firstname, \' \', lastname)'),
     array('module' => 'stampcoll', 'action' => 'delete stamp', 'mtable' => 'user',      'field' => 'concat(firstname, \' \', lastname)'),
 );

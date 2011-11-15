@@ -33,6 +33,8 @@ $sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    
 $page       = optional_param('page', 0, PARAM_INT);                             // page
 $updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // is the preferences form being saved
 $perpage    = optional_param('perpage', STAMPCOLL_USERS_PER_PAGE, PARAM_INT);   // users per page preference
+$delete     = optional_param('delete', null, PARAM_INT);                        // stamp id to delete
+$confirmed  = optional_param('confirmed', false, PARAM_BOOL);                   // confirm the operation
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -60,12 +62,34 @@ require_capability('mod/stampcoll:managestamps', $PAGE->context);
 
 add_to_log($course->id, 'stampcoll', 'manage', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
 
+$output = $PAGE->get_renderer('mod_stampcoll');
+
 if ($updatepref) {
     require_sesskey();
     if ($perpage > 0) {
         set_user_preference('stampcoll_perpage', $perpage);
     }
     redirect($PAGE->url);
+}
+
+if ($delete) {
+    // make sure the stamp is from this collection
+    $stamp = $DB->get_record('stampcoll_stamps', array('id' => $delete, 'stampcollid' => $stampcoll->id), '*', MUST_EXIST);
+    $stamp = new stampcoll_stamp($stampcoll, $stamp);
+    if (!$confirmed) {
+        // let the user confirm
+        echo $output->header();
+        echo $output->confirm($output->render($stamp) . ' ' . get_string('deletestampconfirm', 'mod_stampcoll'),
+            new moodle_url($PAGE->url, array('delete' => $stamp->id, 'confirmed' => 1)),
+            $PAGE->url);
+        echo $output->footer();
+        die();
+    } else {
+        require_sesskey();
+        add_to_log($course->id, 'stampcoll', 'delete stamp', 'view.php?id='.$cm->id, $stamp->holderid, $cm->id);
+        $DB->delete_records('stampcoll_stamps', array('id' => $stamp->id));
+        redirect($PAGE->url);
+    }
 }
 
 if ($data = data_submitted()) {
@@ -75,7 +99,7 @@ if ($data = data_submitted()) {
     $holderids = array_keys(get_enrolled_users($PAGE->context, 'mod/stampcoll:collectstamps', 0, 'u.id'));
 
     // add new stamps
-    if (is_array($data->addnewstamp) and !empty($data->addnewstamp)) {
+    if (!empty($data->addnewstamp) and is_array($data->addnewstamp)) {
         foreach ($data->addnewstamp as $holderid => $text) {
             $holderid = clean_param($holderid, PARAM_INT);
             if (empty($holderid)) {
@@ -105,7 +129,7 @@ if ($data = data_submitted()) {
     }
 
     // update existing stamps
-    if (is_array($data->stampnewtext) and !empty($data->stampnewtext)) {
+    if (!empty($data->stampnewtext) and is_array($data->stampnewtext)) {
 
         // get the list of stamps that can be modified via this bulk operation
         list($subsql1, $params1) = $DB->get_in_or_equal(array_keys($data->stampnewtext));
@@ -141,9 +165,6 @@ if ($data = data_submitted()) {
 
     redirect($PAGE->url);
 }
-
-
-$output = $PAGE->get_renderer('mod_stampcoll');
 
 echo $output->header();
 

@@ -155,6 +155,98 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
         return $htmlpagingbar . $htmltable . $htmlpagingbar . $htmlpreferences;
     }
 
+    /**
+     * Renders a table with multiple users' stamps
+     *
+     * @param stampcoll_collection $collection
+     * @return string HTML
+     */
+    protected function render_stampcoll_management_collection(stampcoll_management_collection $collection) {
+
+        $holders = $collection->list_stamp_holders();
+
+        if (empty($holders)) {
+            return $this->output->heading(get_string('nocollectingusers', 'stampcoll'), 3);
+        }
+
+        $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page, $collection->perpage, $this->page->url, 'page'));
+
+        $table = new html_table();
+        $table->attributes['class'] = 'collection management';
+
+        $sortbyfirstname = $this->helper_sortable_heading(get_string('firstname'),
+            'firstname', $collection->sortedby, $collection->sortedhow);
+        $sortbylastname = $this->helper_sortable_heading(get_string('lastname'),
+            'lastname', $collection->sortedby, $collection->sortedhow);
+        if ($this->helper_fullname_format() == 'lf') {
+            $sortbyname = $sortbylastname . ' / ' . $sortbyfirstname;
+        } else {
+            $sortbyname = $sortbyfirstname . ' / ' . $sortbylastname;
+        }
+
+        $sortbycount = $this->helper_sortable_heading(get_string('numberofstamps', 'stampcoll'),
+            'count', $collection->sortedby, $collection->sortedhow);
+
+        $table->head = array('', $sortbyname, $sortbycount, 'Text', 'Given on', 'Given by', 'Action'); // TODO localize
+
+        foreach ($holders as $holder) {
+            $picture    = $this->output->user_picture($holder);
+            $fullname   = fullname($holder);
+            $fullname   = html_writer::link(
+                            new moodle_url($this->page->url, array('view' => 'single', 'userid' => $holder->id)),
+                            $fullname);
+            $collected  = $collection->list_stamps($holder->id);
+            $count      = count($collected);
+
+            $textform = html_writer::tag('textarea', '', array('name' => 'addnewstamp['.$holder->id.']'));
+
+            $row = new html_table_row(array($picture, $fullname, $count, $textform));
+            $row->attributes['class'] = 'holderinfo';
+            foreach ($row->cells as $cell) {
+                $cell->rowspan = $count + 1;
+            }
+            // make the cell for adding new stamp spanning over stamp-info cells
+            $cell->rowspan = 1;
+            $cell->colspan = 4;
+            $table->data[] = $row;
+
+            if (!empty($collected)) {
+                foreach ($collected as $stamp) {
+                    $newtext = html_writer::tag('textarea', s($stamp->text), array('name' => 'stampnewtext['.$stamp->id.']'));
+                    $oldtext = html_writer::empty_tag('input',
+                        array('value' => s($stamp->text), 'type' => 'hidden', 'name' => 'stampoldtext['.$stamp->id.']'));
+                    if ($stamp->giverid) {
+                        $giver = $collection->get_user_info($stamp->giverid);
+                        $picture = $this->output->user_picture($giver, array('size' => 16));
+                        $fullname = fullname($giver);
+                        $giver = $picture . ' ' . $fullname;
+                    } else {
+                        $giver = '-';
+                    }
+                    $row = new html_table_row(array(
+                        $newtext.$oldtext,
+                        userdate($stamp->timemodified, get_string('strftimedate', 'core_langconfig')),
+                        $giver,
+                        ''
+                    ));
+                    $row->attributes['class'] = 'stampinfo';
+                    $table->data[] = $row;
+                }
+            }
+        }
+
+        $htmltable = html_writer::table($table);
+        $htmlsubmit = html_writer::tag('div',
+            html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('updatestamps', 'mod_stampcoll'))).
+            html_writer::empty_tag('input', array('type' => 'hidden', 'value' => sesskey(), 'name' => 'sesskey')),
+            array('class' => 'submitwrapper'));
+        $htmlform = html_writer::tag('form', $htmltable . $htmlsubmit,
+            array('id' => 'stampsmanager', 'action' => $this->page->url->out(), 'method' => 'post'));
+        $htmlpreferences = $this->helper_preferences_form($collection->perpage);
+
+        return $htmlpagingbar . $htmlform . $htmlpagingbar . $htmlpreferences;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Helper methods
     ////////////////////////////////////////////////////////////////////////////

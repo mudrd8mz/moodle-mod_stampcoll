@@ -292,3 +292,10 @@ class stampcoll_multiuser_collection extends stampcoll_collection implements ren
         return $holders;
     }
 }
+
+
+/**
+ * Collection of multiple users' stamps used at the managestamps.php screen
+ */
+class stampcoll_management_collection extends stampcoll_multiuser_collection implements renderable {
+}

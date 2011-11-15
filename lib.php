@@ -367,4 +367,10 @@ function stampcoll_extend_navigation(navigation_node $navref, stdclass $course, 
  * @param navigation_node $stampcollnode {@link navigation_node}
  */
 function stampcoll_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $stampcollnode=null) {
+    global $PAGE;
+
+    if (has_capability('mod/stampcoll:managestamps', $PAGE->cm->context)) {
+        $url = new moodle_url('/mod/stampcoll/managestamps.php', array('cmid' => $PAGE->cm->id));
+        $stampcollnode->add(get_string('managestamps', 'mod_stampcoll'), $url, settings_navigation::TYPE_SETTING);
+    }
 }

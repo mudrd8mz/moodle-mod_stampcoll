@@ -23,6 +23,7 @@
     vertical-align: middle;
     padding-left: 5px;
     padding-right: 5px;
+    vertical-align: top;
 }
 
 #page-mod-stampcoll-view table.collection.multiuser .r1 {
@@ -57,3 +58,40 @@
     background-color: white;
     text-align:center;
 }
+
+/**
+ * Management collection
+ */
+#page-mod-stampcoll-managestamps table.collection.management {
+    width: 90%;
+    margin: 1em auto;
+}
+
+#page-mod-stampcoll-managestamps table.collection.management td,
+#page-mod-stampcoll-managestamps table.collection.management th {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #DDDDDD;
+    vertical-align: middle;
+    padding-left: 5px;
+    padding-right: 5px;
+    vertical-align: top;
+}
+
+#page-mod-stampcoll-managestamps table.collection.management .holderinfo .c0 {
+    width: 35px;
+}
+
+#page-mod-stampcoll-managestamps table.collection.management .holderinfo .c1 {
+    text-align: left;
+}
+
+#page-mod-stampcoll-managestamps table.collection.management .holderinfo .c2 {
+    text-align: center;
+}
+
+#page-mod-stampcoll-managestamps #stampsmanager .submitwrapper {
+    text-align: center;
+    margin-bottom: 2em;
+}
+

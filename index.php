@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage stampcoll
- * @copyright  2011 David Mudrak <david@moodle.com>
+ * @copyright  2007 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -33,7 +33,7 @@ $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
 
 require_course_login($course);
 
-add_to_log($course->id, 'stampcoll', 'view all', 'index.php?id=$course->id', '');
+add_to_log($course->id, 'stampcoll', 'view all', 'index.php?id='.$course->id, '');
 
 if (!$stampcolls = get_all_instances_in_course('stampcoll', $course)) {
     notice(get_string('noinstances', 'stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));

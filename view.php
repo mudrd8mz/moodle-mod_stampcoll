@@ -78,7 +78,7 @@ $PAGE->set_heading($course->fullname);
 
 require_capability('mod/stampcoll:view', $PAGE->context);
 
-add_to_log($course->id, 'stampcoll', 'view', 'view.php?id=$cm->id', $stampcoll->id, $cm->id);
+add_to_log($course->id, 'stampcoll', 'view', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
 
 if ($updatepref) {
     require_sesskey();

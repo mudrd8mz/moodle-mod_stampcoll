@@ -56,7 +56,7 @@ if ($data = $form->get_data()) {
         throw new moodle_exception('invalid_userto_id', 'stampcoll');
     }
 
-    add_to_log($course->id, 'stampcoll', 'add stamp', 'view.php?id=$cm->id', $data->userto, $cm->id);
+    add_to_log($course->id, 'stampcoll', 'add stamp', 'view.php?id='.$cm->id, $data->userto, $cm->id);
 
     $DB->insert_record('stampcoll_stamps', array(
         'stampcollid'   => $stampcoll->id,

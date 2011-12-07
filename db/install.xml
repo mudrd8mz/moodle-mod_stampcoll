@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/stampcoll/db" VERSION="20110701" COMMENT="XMLDB file for Moodle mod/stampcoll"
+<XMLDB PATH="mod/stampcoll/db" VERSION="20111207" COMMENT="XMLDB file for Moodle mod/stampcoll"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -11,10 +11,9 @@
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="course" NEXT="intro"/>
         <FIELD NAME="intro" TYPE="text" LENGTH="big" NOTNULL="false" SEQUENCE="false" COMMENT="Introduction text" PREVIOUS="name" NEXT="introformat"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="The format of the intro field" PREVIOUS="intro" NEXT="image"/>
-        <FIELD NAME="image" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="introformat" NEXT="timemodified"/>
+        <FIELD NAME="image" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" PREVIOUS="introformat" NEXT="timemodified"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="image" NEXT="displayzero"/>
-        <FIELD NAME="displayzero" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="If displayzero, then display users with no stamps collected, too." PREVIOUS="timemodified" NEXT="anonymous"/>
-        <FIELD NAME="anonymous" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="If anonymous, then the ID of stamp giver is not saved into the stamps table." PREVIOUS="displayzero"/>
+        <FIELD NAME="displayzero" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="If displayzero, then display users with no stamps collected, too." PREVIOUS="timemodified"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for stampcoll"/>
@@ -26,20 +25,21 @@
     <TABLE NAME="stampcoll_stamps" COMMENT="stampcoll_stamps table stores information about given stamps" PREVIOUS="stampcoll">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="stampcollid"/>
-        <FIELD NAME="stampcollid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="userid"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="stampcollid" NEXT="giver"/>
-        <FIELD NAME="giver" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" COMMENT="The ID of a user who gave the stamp. If stampcoll is anonymous, put zero here." PREVIOUS="userid" NEXT="text"/>
-        <FIELD NAME="text" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Text comment by the stamp giver." PREVIOUS="giver" NEXT="timemodified"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="text"/>
+        <FIELD NAME="stampcollid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the module instance" PREVIOUS="id" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="The owner of the stamp" PREVIOUS="stampcollid" NEXT="giver"/>
+        <FIELD NAME="giver" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of a user who gave the stamp. If it was given in anonymous mode in 1.x, null is here" PREVIOUS="userid" NEXT="modifier"/>
+        <FIELD NAME="modifier" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" COMMENT="The ID of the user who most recently modified the stamp text (if any)" PREVIOUS="giver" NEXT="text"/>
+        <FIELD NAME="text" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Text comment by the stamp giver." PREVIOUS="modifier" NEXT="timecreated"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" COMMENT="When the stamp was originally given" PREVIOUS="text" NEXT="timemodified"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="timecreated"/>
       </FIELDS>
       <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for stampcoll_stamps" NEXT="stampcollid"/>
-        <KEY NAME="stampcollid" TYPE="foreign" FIELDS="stampcollid" REFTABLE="stampcoll" REFFIELDS="id" PREVIOUS="primary"/>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for stampcoll_stamps" NEXT="fk_stampcollid"/>
+        <KEY NAME="fk_stampcollid" TYPE="foreign" FIELDS="stampcollid" REFTABLE="stampcoll" REFFIELDS="id" PREVIOUS="primary" NEXT="fk_userid"/>
+        <KEY NAME="fk_userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id" PREVIOUS="fk_stampcollid" NEXT="fk_giver"/>
+        <KEY NAME="fk_giver" TYPE="foreign" FIELDS="giver" REFTABLE="user" REFFIELDS="id" PREVIOUS="fk_userid" NEXT="fk_modifier"/>
+        <KEY NAME="fk_modifier" TYPE="foreign" FIELDS="modifier" REFTABLE="user" REFFIELDS="id" PREVIOUS="fk_giver"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" NEXT="giver"/>
-        <INDEX NAME="giver" UNIQUE="false" FIELDS="giver" PREVIOUS="userid"/>
-      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

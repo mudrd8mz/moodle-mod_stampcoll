@@ -58,29 +58,26 @@ function stampcoll_supports($feature) {
  * @return int id of the new instance
  */
 function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
-    global $DB;
-
-    $cmid    = $stampcoll->coursemodule;
-    $context = get_context_instance(CONTEXT_MODULE, $cmid);
+    global $DB, $COURSE;
 
     $stampcoll->timemodified = time();
+    $stampcoll->image = null;
 
-    // save the new record into the database and reload it
-    $newid = $DB->insert_record('stampcoll', $stampcoll);
-
-    // process the eventual image in the filepicker
-    $filename = $mform->get_new_filename('image');
-    if ($filename !== false) {
+    $context = get_context_instance(CONTEXT_MODULE, $stampcoll->coursemodule);
+    $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
+        'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
+    if ($draftitemid = file_get_submitted_draft_itemid('image')) {
+        file_save_draft_area_files($draftitemid, $context->id, 'mod_stampcoll', 'image', 0, $imageoptions);
         $fs = get_file_storage();
-        $fs->delete_area_files($context->id, 'mod_stampcoll', 'image');
-        $mform->save_stored_file('image', $context->id, 'mod_stampcoll', 'image', 0, '/', $filename);
-        $DB->set_field('stampcoll', 'image', $filename, array('id' => $newid));
-
-    } else {
-        // todo put the default image into the filepool
+        foreach ($fs->get_area_files($context->id, 'mod_stampcoll', 'image', 0, 'timemodified DESC', false) as $storedfile) {
+            $stampcoll->image = $storedfile->get_filename();
+            // note: $storedfile->get_imageinfo() returns width, height and mimetype
+            break;
+        }
     }
 
-    return $newid;
+    // save the new record into the database and reload it
+    return $DB->insert_record('stampcoll', $stampcoll);
 }
 
 /**
@@ -91,15 +88,28 @@ function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mfo
  * @return boolean
  */
 function stampcoll_update_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
-    global $DB;
+    global $DB, $COURSE;
 
     $stampcoll->id = $stampcoll->instance;
     $stampcoll->timemodified = time();
 
-    // todo deal with stamp image on update
-    unset($stampcoll->image);
+    $context = get_context_instance(CONTEXT_MODULE, $stampcoll->coursemodule);
+    $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
+        'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
+    if ($draftitemid = file_get_submitted_draft_itemid('image')) {
+        $stampcoll->image = null;
+        file_save_draft_area_files($draftitemid, $context->id, 'mod_stampcoll', 'image', 0, $imageoptions);
+        $fs = get_file_storage();
+        foreach ($fs->get_area_files($context->id, 'mod_stampcoll', 'image', 0, 'timemodified DESC', false) as $storedfile) {
+            $stampcoll->image = $storedfile->get_filename();
+            // note: $storedfile->get_imageinfo() returns width, height and mimetype
+            break;
+        }
+    }
 
-    return $DB->update_record('stampcoll', $stampcoll);
+    $DB->update_record('stampcoll', $stampcoll);
+
+    return true;
 }
 
 /**

@@ -58,8 +58,9 @@ class mod_stampcoll_mod_form extends moodleform_mod {
         $mform->addElement('header', 'stampcollection', get_string('modulename', 'stampcoll'));
 
         // Stamp image
-        $imageoptions = array('accepted_types' => array('image'), 'maxbytes' => $COURSE->maxbytes);
-        $mform->addElement('filepicker', 'image', get_string('stampimage', 'stampcoll'), '', $imageoptions);
+        $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
+            'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
+        $mform->addElement('filemanager', 'image', get_string('stampimage', 'stampcoll'), null, $imageoptions);
 
         $mform->addElement('static', 'stampimageinfo', '', get_string('stampimageinfo', 'stampcoll') );
 
@@ -72,5 +73,27 @@ class mod_stampcoll_mod_form extends moodleform_mod {
 
         // Buttons -------------------------------------------------------------
         $this->add_action_buttons();
+    }
+
+    /**
+     * Sets the default form data
+     *
+     * When editing an existing instance, this method copies the current stamp image into the
+     * draft area (standard filemanager workflow).
+     *
+     * @param array $defaultvalues
+     */
+    function data_preprocessing(&$defaultvalues) {
+        global $COURSE;
+
+        parent::data_preprocessing($defaultvalues);
+
+        if ($this->current->instance) {
+            $draftitemid = file_get_submitted_draft_itemid('image');
+            $options = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
+                'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
+            file_prepare_draft_area($draftitemid, $this->context->id, 'mod_stampcoll', 'image', 0, $options);
+            $defaultvalues['image'] = $draftitemid;
+        }
     }
 }

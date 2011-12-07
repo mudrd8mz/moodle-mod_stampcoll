@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$mod_stampcoll_capabilities = array(
+$capabilities = array(
 
     // can see the main page of the module instance and basic information
     // about it (like the introduction)

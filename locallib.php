@@ -49,13 +49,19 @@ class stampcoll_stamp implements renderable {
     /** @var int */
     public $holderid;
 
-    /** @var int */
+    /** @var int|null */
     public $giverid = null;
+
+    /** @var int|null */
+    public $modifierid = null;
 
     /** @var string */
     public $text = null;
 
     /** @var int */
+    public $timecreated = null;
+
+    /** @var int|null */
     public $timemodified = null;
 
     /**
@@ -72,11 +78,16 @@ class stampcoll_stamp implements renderable {
             throw new coding_exception('the stamp record must provide id and userid');
         }
 
-        $this->id       = $record->id;
-        $this->holderid = $record->userid;
+        $this->id          = $record->id;
+        $this->holderid    = $record->userid;
+        $this->timecreated = $record->timecreated;
 
         if (isset($record->giver)) {
             $this->giverid = $record->giver;
+        }
+
+        if (isset($record->modifier)) {
+            $this->modifierid = $record->modifier;
         }
 
         if (isset($record->text)) {

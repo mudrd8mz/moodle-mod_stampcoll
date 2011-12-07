@@ -124,12 +124,13 @@ if ($view == 'own') {
     }
 
     // construct the sql returning all stamp info to display
-    $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext, s.timemodified AS stamptimemodified,".
+    $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext,
+                   s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                    user_picture::fields('gu', null, 'giverid', 'giver')."
               FROM {stampcoll_stamps} s
          LEFT JOIN {user} gu ON s.giver = gu.id AND gu.deleted = 0
              WHERE s.stampcollid = :stampcollid AND s.userid = :holderid
-          ORDER BY s.timemodified";
+          ORDER BY s.timecreated";
     $params = array('stampcollid' => $stampcoll->id, 'holderid' => $USER->id);
 
     // prepare the renderable collection
@@ -146,6 +147,7 @@ if ($view == 'own') {
                 'userid'        => $record->holderid,
                 'giver'         => $record->giverid,
                 'text'          => $record->stamptext,
+                'timecreated'   => $record->stamptimecreated,
                 'timemodified'  => $record->stamptimemodified,
             );
             $collection->add_stamp($stamp);
@@ -172,12 +174,13 @@ if ($view == 'own') {
     }
 
     // construct the sql returning all stamp info to display
-    $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext, s.timemodified AS stamptimemodified,".
+    $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext,
+                   s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                    user_picture::fields('gu', null, 'giverid', 'giver')."
               FROM {stampcoll_stamps} s
          LEFT JOIN {user} gu ON s.giver = gu.id AND gu.deleted = 0
              WHERE s.stampcollid = :stampcollid AND s.userid = :holderid
-          ORDER BY s.timemodified";
+          ORDER BY s.timecreated";
     $params = array('stampcollid' => $stampcoll->id, 'holderid' => $user->id);
 
 
@@ -195,6 +198,7 @@ if ($view == 'own') {
                 'userid'        => $record->holderid,
                 'giver'         => $record->giverid,
                 'text'          => $record->stamptext,
+                'timecreated'   => $record->stamptimecreated,
                 'timemodified'  => $record->stamptimemodified,
             );
             $collection->add_stamp($stamp);
@@ -301,13 +305,14 @@ if ($view == 'own') {
         list($holdersql, $holderparam) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         $sql = "SELECT ".user_picture::fields('hu', null, 'holderid', 'holder').",
-                       s.id AS stampid, s.text AS stamptext, s.timemodified AS stamptimemodified,".
+                       s.id AS stampid, s.text AS stamptext,
+                       s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                        user_picture::fields('gu', null, 'giverid', 'giver')."
                   FROM {user} hu
         $jointype JOIN {stampcoll_stamps} s ON s.stampcollid = :stampcollid AND s.userid = hu.id
              LEFT JOIN {user} gu ON s.giver = gu.id AND gu.deleted = 0
                  WHERE hu.id $holdersql
-              ORDER BY s.timemodified";
+              ORDER BY s.timecreated";
 
         $params = array_merge(array('stampcollid' => $stampcoll->id), $holderparam);
 
@@ -325,6 +330,7 @@ if ($view == 'own') {
                     'userid'        => $record->holderid,
                     'giver'         => $record->giverid,
                     'text'          => $record->stamptext,
+                    'timecreated'   => $record->stamptimecreated,
                     'timemodified'  => $record->stamptimemodified,
                 );
                 $collection->add_stamp($stamp);

@@ -123,7 +123,7 @@ if ($data = data_submitted()) {
                 'userid'        => $holderid,
                 'giver'         => $USER->id,
                 'text'          => $text,
-                'timemodified'  => $now),
+                'timecreated'   => $now),
             false, true);
         }
     }
@@ -155,6 +155,7 @@ if ($data = data_submitted()) {
                 $update->id = $stampid;
                 $update->text = $text;
                 $update->timemodified = $now;
+                $update->modifier = $USER->id;
 
                 add_to_log($course->id, 'stampcoll', 'update stamp', 'view.php?id='.$cm->id, $current->userid, $cm->id);
 
@@ -229,13 +230,14 @@ if ($userids) {
     list($holdersql, $holderparam) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
     $sql = "SELECT ".user_picture::fields('hu', null, 'holderid', 'holder').",
-                   s.id AS stampid, s.text AS stamptext, s.timemodified AS stamptimemodified,".
+                   s.id AS stampid, s.text AS stamptext,
+                   s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                    user_picture::fields('gu', null, 'giverid', 'giver')."
               FROM {user} hu
          LEFT JOIN {stampcoll_stamps} s ON s.stampcollid = :stampcollid AND s.userid = hu.id
          LEFT JOIN {user} gu ON s.giver = gu.id AND gu.deleted = 0
              WHERE hu.id $holdersql
-          ORDER BY s.timemodified";
+          ORDER BY COALESCE(s.timemodified, s.timecreated) DESC";
 
     $params = array_merge(array('stampcollid' => $stampcoll->id), $holderparam);
 
@@ -253,6 +255,7 @@ if ($userids) {
                 'userid'        => $record->holderid,
                 'giver'         => $record->giverid,
                 'text'          => $record->stamptext,
+                'timecreated'   => $record->stamptimecreated,
                 'timemodified'  => $record->stamptimemodified,
             );
             $collection->add_stamp($stamp);

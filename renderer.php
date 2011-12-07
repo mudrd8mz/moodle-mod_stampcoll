@@ -225,7 +225,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
                     }
                     $row = new html_table_row(array(
                         $newtext.$oldtext,
-                        userdate($stamp->timemodified, get_string('strftimedate', 'core_langconfig')),
+                        userdate($stamp->timecreated, get_string('strftimedate', 'core_langconfig')),
                         $giver,
                         html_writer::link(new moodle_url($this->page->url, array('delete' => $stamp->id)), get_string('deletestamp', 'mod_stampcoll')),
                     ));

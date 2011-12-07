@@ -63,7 +63,7 @@ if ($data = $form->get_data()) {
         'userid'        => $data->userto,
         'giver'         => $data->userfrom,
         'text'          => $data->text,
-        'timemodified'  => time()));
+        'timecreated'   => time()));
 
     redirect(new moodle_url('/mod/stampcoll/view.php', array('id' => $cm->id, 'view' => 'single', 'userid' => $data->userto)));
 }

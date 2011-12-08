@@ -274,5 +274,89 @@ function xmldb_stampcoll_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2011120714, 'stampcoll');
     }
 
+    /**
+     * Migrate custom stamp images to stored files in the file pool
+     */
+    if ($oldversion < 2011120715) {
+
+        $fs = get_file_storage();
+
+        $sql = "SELECT sc.id, sc.course, sc.image, cm.id AS cmid
+                  FROM {stampcoll} sc
+                  JOIN {modules} m ON (m.name = 'stampcoll')
+                  JOIN {course_modules} cm ON (cm.module = m.id AND cm.instance = sc.id)
+                 WHERE sc.image IS NOT NULL AND sc.image <> '/UPGRADEINPROGRESS/'";
+        $rs = $DB->get_recordset_sql($sql);
+
+        foreach ($rs as $stampcoll) {
+            if (empty($stampcoll->image)) {
+                $DB->set_field('stampcoll', 'image', null, array('id' => $stampcoll->id));
+                continue;
+            }
+            $imagefilename = basename($stampcoll->image);
+            $context = get_context_instance(CONTEXT_MODULE, $stampcoll->cmid);
+            if ($fs->file_exists($context->id, 'mod_stampcoll', 'image', 0, '/', $imagefilename)) {
+                // hmm, I can't really see how this might happen but just in case...
+                $DB->set_field('stampcoll', 'image', '/UPGRADEINPROGRESS/', array('id' => $stampcoll->id));
+                continue;
+            }
+            $coursecontext = get_context_instance(CONTEXT_COURSE, $stampcoll->course);
+            $imagefilepath = dirname($stampcoll->image);
+            if ($imagefilepath == '.') {
+                $imagefilepath = '/';
+            } else {
+                $imagefilepath = '/'.$imagefilepath.'/';
+            }
+            $legacyimage = $fs->get_file($coursecontext->id, 'course', 'legacy', 0, $imagefilepath, $imagefilename);
+            if ($legacyimage instanceof stored_file) {
+                $filerecord = array('contextid' => $context->id,
+                                    'component' => 'mod_stampcoll',
+                                    'filearea'  => 'image',
+                                    'itemid'    => 0,
+                                    'filepath'  => '/',
+                                    'filename'  => $imagefilename);
+                $stampimage = $fs->create_file_from_storedfile($filerecord, $legacyimage);
+                $DB->set_field('stampcoll', 'image', '/UPGRADEINPROGRESS/', array('id' => $stampcoll->id));
+            } else {
+                $DB->set_field('stampcoll', 'image', null, array('id' => $stampcoll->id));
+                continue;
+            }
+        }
+        $rs->close();
+
+        upgrade_mod_savepoint(true, 2011120715, 'stampcoll');
+    }
+
+    /**
+     * Store the filenames of migrate custom stamp images in stampcoll table
+     */
+    if ($oldversion < 2011120716) {
+
+        $fs = get_file_storage();
+
+        $sql = "SELECT sc.id, sc.course, sc.image, cm.id AS cmid
+                  FROM {stampcoll} sc
+                  JOIN {modules} m ON (m.name = 'stampcoll')
+                  JOIN {course_modules} cm ON (cm.module = m.id AND cm.instance = sc.id)
+                 WHERE sc.image = '/UPGRADEINPROGRESS/'";
+        $rs = $DB->get_recordset_sql($sql);
+
+        foreach ($rs as $stampcoll) {
+            $context = get_context_instance(CONTEXT_MODULE, $stampcoll->cmid);
+            foreach ($fs->get_area_files($context->id, 'mod_stampcoll', 'image', 0, 'timemodified DESC', false) as $storedfile) {
+                $imagefilename = $storedfile->get_filename();
+                if (! $storedfile->is_valid_image()) {
+                    echo $OUTPUT->notification('Invalid stamp image '.$imagefilename.' in the stampcoll id '.$stampcoll->id.' (cmid '.$stampcoll->cmid.')');
+                }
+                break;
+            }
+            $DB->set_field('stampcoll', 'image', $imagefilename, array('id' => $stampcoll->id));
+        }
+        $rs->close();
+
+        upgrade_mod_savepoint(true, 2011120716, 'stampcoll');
+    }
+
+
     return true;
 }

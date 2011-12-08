@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$module->version    = 2011120714;
+$module->version    = 2011120716;
 $module->requires   = 2011033002;
 $module->cron       = 0;
 $module->component  = 'mod_stampcoll';

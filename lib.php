@@ -157,55 +157,47 @@ function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
  * Prints a detailed representation of what a user has done with
  * a given particular instance of this module, for user activity reports.
  *
- * @todo rewrite
+ * @param stdClass $course
+ * @param stdClass $user
+ * @param cm_info $mod
+ * @param stdClass $stampcoll
  * @return string HTML
  */
 function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
-    global $USER;
+    global $CFG, $USER, $PAGE, $DB;
+    require_once(dirname(__FILE__).'/locallib.php');
 
-    return '';
+    $stampcoll = new stampcoll($stampcoll, $mod, $course);
 
-    /*
-    $context = get_context_instance(CONTEXT_MODULE, $mod->id); 
     if ($USER->id == $user->id) {
-        if (!has_capability('mod/stampcoll:viewownstamps', $context)) {
+        if (!has_capability('mod/stampcoll:viewownstamps', $stampcoll->context)) {
             echo get_string('notallowedtoviewstamps', 'stampcoll');
-            return true;
+            return;
         }
     } else {
-        if (!has_capability('mod/stampcoll:viewotherstamps', $context)) {
+        if (!has_capability('mod/stampcoll:viewotherstamps', $stampcoll->context)) {
             echo get_string('notallowedtoviewstamps', 'stampcoll');
-            return true;
+            return;
         }
     }
 
-    if (!$allstamps = stampcoll_get_stamps($stampcoll->id)) {
-        // no stamps yet in this instance
-        echo get_string('nostampscollected', "stampcoll");
-        return true;
-    }
+    $rawstamps = $DB->get_records('stampcoll_stamps',
+        array('stampcollid' => $stampcoll->id, 'userid' => $user->id), 'timecreated', '*');
 
-    $userstamps = array();
-    foreach ($allstamps as $s) {
-        if ($s->userid == $user->id) {
-            $userstamps[] = $s;
-        }
-    }
-    unset($allstamps);
-    unset($s);
-
-    if (empty($userstamps)) {
+    if (empty($rawstamps)) {
         echo get_string('nostampscollected', 'stampcoll');
-    } else {
-        echo get_string('numberofcollectedstamps', 'stampcoll', count($userstamps));
-        echo '<div class="stamppictures">';
-        foreach ($userstamps as $s) {
-            echo stampcoll_stamp($s, $stampcoll->image);
-        }
-        echo '</div>';
-        unset($s);
+        return;
     }
-     */
+
+    $output = $PAGE->get_renderer('mod_stampcoll');
+
+    echo get_string('numberofcollectedstamps', 'stampcoll', count($rawstamps));
+    echo $output->box_start('stamppictures');
+    foreach ($rawstamps as $rawstamp) {
+        $stamp = new stampcoll_stamp($stampcoll, $rawstamp);
+        echo $output->render($stamp);
+    }
+    echo $output->box_end();
 }
 
 /**

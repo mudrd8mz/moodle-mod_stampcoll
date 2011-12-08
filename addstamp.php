@@ -34,6 +34,8 @@ $cm         = get_coursemodule_from_instance('stampcoll', $stampcoll->id, $cours
 
 require_login($course, false, $cm);
 
+$stampcoll = new stampcoll($stampcoll, $cm, $course);
+
 if (isguestuser()) {
     print_error('guestsarenotallowed');
 }
@@ -42,7 +44,7 @@ $PAGE->set_url(new moodle_url('/mod/stampcoll/addstamp.php', array('scid' => $st
 $PAGE->set_title($stampcoll->name);
 $PAGE->set_heading($course->fullname);
 
-require_capability('mod/stampcoll:givestamps', $PAGE->context);
+require_capability('mod/stampcoll:givestamps', $stampcoll->context);
 
 $form = new stampcoll_stamp_form();
 
@@ -52,7 +54,7 @@ if ($data = $form->get_data()) {
         throw new moodle_exception('invalid_userfrom_id', 'stampcoll');
     }
 
-    if (!has_capability('mod/stampcoll:collectstamps', $PAGE->context, $data->userto, false)) {
+    if (!has_capability('mod/stampcoll:collectstamps', $stampcoll->context, $data->userto, false)) {
         throw new moodle_exception('invalid_userto_id', 'stampcoll');
     }
 

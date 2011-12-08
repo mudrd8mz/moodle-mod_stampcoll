@@ -32,7 +32,7 @@ $sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                
 $sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // sort direction
 $page       = optional_param('page', 0, PARAM_INT);                             // page
 $updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // is the preferences form being saved
-$perpage    = optional_param('perpage', STAMPCOLL_USERS_PER_PAGE, PARAM_INT);   // users per page preference
+$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // users per page preference
 $delete     = optional_param('delete', null, PARAM_INT);                        // stamp id to delete
 $confirmed  = optional_param('confirmed', false, PARAM_BOOL);                   // confirm the operation
 
@@ -54,11 +54,13 @@ if ($page < 0) {
 
 require_login($course, true, $cm);
 
+$stampcoll = new stampcoll($stampcoll, $cm, $course);
+
 $PAGE->set_url(new moodle_url('/mod/stampcoll/managestamps.php', array('cmid' => $cmid)));
 $PAGE->set_title($stampcoll->name);
 $PAGE->set_heading($course->fullname);
 
-require_capability('mod/stampcoll:managestamps', $PAGE->context);
+require_capability('mod/stampcoll:managestamps', $stampcoll->context);
 
 add_to_log($course->id, 'stampcoll', 'manage', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
 
@@ -96,7 +98,7 @@ if ($data = data_submitted()) {
     require_sesskey();
     $now = time();
     // get the list of userids of users who are allowed to collect stamps here
-    $holderids = array_keys(get_enrolled_users($PAGE->context, 'mod/stampcoll:collectstamps', 0, 'u.id'));
+    $holderids = array_keys(get_enrolled_users($stampcoll->context, 'mod/stampcoll:collectstamps', 0, 'u.id'));
 
     // add new stamps
     if (!empty($data->addnewstamp) and is_array($data->addnewstamp)) {
@@ -181,7 +183,7 @@ if ($groupmode == NOGROUPS) {
     groups_print_activity_menu($cm, $PAGE->url);
     $groupid = groups_get_activity_group($cm);
 
-    if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $PAGE->context)) {
+    if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $stampcoll->context)) {
         if (!groups_is_member($groupid)) {
             // this should not happen but...
             notice(get_string('groupusernotmember', 'core_error'), new moodle_url('/course/view.php', array('id' => $course->id)));
@@ -190,7 +192,7 @@ if ($groupmode == NOGROUPS) {
 }
 
 // get the sql returning all actively enrolled users who can collect stamps
-list($enrolsql, $enrolparams) = get_enrolled_sql($PAGE->context, 'mod/stampcoll:collectstamps', $groupid, true);
+list($enrolsql, $enrolparams) = get_enrolled_sql($stampcoll->context, 'mod/stampcoll:collectstamps', $groupid, true);
 
 // in the first query, get the list of users to be displayed
 $sql = "SELECT COUNT(*)
@@ -213,7 +215,7 @@ $sql = "SELECT u.id, u.firstname, u.lastname, COUNT(s.id) AS count
 
 $params = array_merge($enrolparams, array('stampcollid' => $stampcoll->id));
 
-$perpage = get_user_preferences('stampcoll_perpage', STAMPCOLL_USERS_PER_PAGE);
+$perpage = get_user_preferences('stampcoll_perpage', stampcoll::USERS_PER_PAGE);
 
 $userids = array_keys($DB->get_records_sql($sql, $params, $page * $perpage, $perpage));
 

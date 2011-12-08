@@ -40,7 +40,7 @@ $sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                
 $sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // sort direction
 $page       = optional_param('page', 0, PARAM_INT);                             // page
 $updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // is the preferences form being saved
-$perpage    = optional_param('perpage', STAMPCOLL_USERS_PER_PAGE, PARAM_INT);   // users per page preference
+$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // users per page preference
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -68,6 +68,8 @@ if ($page < 0) {
 
 require_login($course, true, $cm);
 
+$stampcoll = new stampcoll($stampcoll, $cm, $course);
+
 if ($view == 'single' and $userid == $USER->id) {
     $view = 'own';
 }
@@ -76,7 +78,7 @@ $PAGE->set_url(new moodle_url('/mod/stampcoll/view.php', array('id' => $cmid, 'v
 $PAGE->set_title($stampcoll->name);
 $PAGE->set_heading($course->fullname);
 
-require_capability('mod/stampcoll:view', $PAGE->context);
+require_capability('mod/stampcoll:view', $stampcoll->context);
 
 add_to_log($course->id, 'stampcoll', 'view', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
 
@@ -88,8 +90,8 @@ if ($updatepref) {
     redirect($PAGE->url);
 }
 
-$canviewownstamps = has_capability('mod/stampcoll:viewownstamps', $PAGE->context);
-$canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $PAGE->context);
+$canviewownstamps = has_capability('mod/stampcoll:viewownstamps', $stampcoll->context);
+$canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $stampcoll->context);
 $canviewsomestamps = $canviewownstamps || $canviewotherstamps;
 $canviewonlyownstamps = $canviewownstamps && (!$canviewotherstamps);
 
@@ -169,7 +171,7 @@ if ($view == 'own') {
 
     $user = $DB->get_record('user', array('id' => $userid), user_picture::fields(), MUST_EXIST);
 
-    if (!is_enrolled($PAGE->context, $user->id, '', true)) {
+    if (!is_enrolled($stampcoll->context, $user->id, '', true)) {
         notice(get_string('usernotenrolled', 'stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));
     }
 
@@ -209,8 +211,8 @@ if ($view == 'own') {
     echo $output->render($collection);
 
     // append a form to give a new stamp
-    if (has_capability('mod/stampcoll:collectstamps', $PAGE->context, $user, false) and
-        has_capability('mod/stampcoll:givestamps', $PAGE->context, $USER)) {
+    if (has_capability('mod/stampcoll:collectstamps', $stampcoll->context, $user, false) and
+        has_capability('mod/stampcoll:givestamps', $stampcoll->context, $USER)) {
 
         $form = new stampcoll_stamp_form(
             new moodle_url('/mod/stampcoll/addstamp.php', array('scid' => $stampcoll->id)),
@@ -249,7 +251,7 @@ if ($view == 'own') {
         groups_print_activity_menu($cm, $PAGE->url);
         $groupid = groups_get_activity_group($cm);
 
-        if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $PAGE->context)) {
+        if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $stampcoll->context)) {
             if (!groups_is_member($groupid)) {
                 // this should not happen but...
                 notice(get_string('groupusernotmember', 'core_error'), new moodle_url('/course/view.php', array('id' => $course->id)));
@@ -258,7 +260,7 @@ if ($view == 'own') {
     }
 
     // get the sql returning all actively enrolled users who can collect stamps
-    list($enrolsql, $enrolparams) = get_enrolled_sql($PAGE->context, 'mod/stampcoll:collectstamps', $groupid, true);
+    list($enrolsql, $enrolparams) = get_enrolled_sql($stampcoll->context, 'mod/stampcoll:collectstamps', $groupid, true);
 
     // determine how to join user and stamps tables
     if ($stampcoll->displayzero) {
@@ -288,7 +290,7 @@ if ($view == 'own') {
 
     $params = array_merge($enrolparams, array('stampcollid' => $stampcoll->id));
 
-    $perpage = get_user_preferences('stampcoll_perpage', STAMPCOLL_USERS_PER_PAGE);
+    $perpage = get_user_preferences('stampcoll_perpage', stampcoll::USERS_PER_PAGE);
 
     $userids = array_keys($DB->get_records_sql($sql, $params, $page * $perpage, $perpage));
 

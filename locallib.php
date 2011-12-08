@@ -27,9 +27,73 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Default number of students per page
+ * Full-featured Stamps collection module API
+ *
+ * This wraps the stampcoll database record with a set of methods that are called
+ * from the module itself. The class should be initialized right after you get
+ * $stampcoll, $cm and $course records at the begining of the script.
  */
-define('STAMPCOLL_USERS_PER_PAGE', 30);
+class stampcoll {
+
+    /** default number of users per page when displaying reports */
+    const USERS_PER_PAGE = 30;
+
+    /** @var stdClass course module record */
+    public $cm;
+
+    /** @var stdClass course record */
+    public $course;
+
+    /** @var stdClass context object */
+    public $context;
+
+    /** @var int stampcoll instance identifier */
+    public $id;
+
+    /** @var string stampcoll activity name */
+    public $name;
+
+    /** @var string introduction or description of the activity */
+    public $intro;
+
+    /** @var int format of the {@link $intro} */
+    public $introformat;
+
+    /** @var null|string null to use the default image name, the file name otherwise */
+    public $image;
+
+    /** @var int the last modification time stamps */
+    public $timemodified;
+
+    /** @var bool should the users without any stamp be listed, too */
+    public $displayzero;
+
+    /**
+     * Initializes the stampcoll API instance using the data from DB
+     *
+     * Makes deep copy of all passed records properties. Replaces integer $course attribute
+     * with a full database record (course should not be stored in instances table anyway).
+     *
+     * @param stdClass $dbrecord stamps collection instance data from the {stampcoll} table
+     * @param stdClass|cm_info $cm course module record as returned by {@link get_coursemodule_from_id()}
+     * @param stdClass $course course record from {course} table
+     * @param stdClass $context the context of the stampcoll instance
+     */
+    public function __construct(stdClass $dbrecord, stdClass $cm, stdClass $course, stdClass $context=null) {
+        foreach ($dbrecord as $field => $value) {
+            if (property_exists('stampcoll', $field)) {
+                $this->{$field} = $value;
+            }
+        }
+        $this->cm = $cm;
+        $this->course = $course;
+        if (is_null($context)) {
+            $this->context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
+        } else {
+            $this->context = $context;
+        }
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTML rendering API                                                         //
@@ -40,7 +104,7 @@ define('STAMPCOLL_USERS_PER_PAGE', 30);
  */
 class stampcoll_stamp implements renderable {
 
-    /** @var stdClass stampcoll instance */
+    /** @var stampcoll stampcoll instance */
     public $stampcoll;
 
     /** @var int */
@@ -67,10 +131,10 @@ class stampcoll_stamp implements renderable {
     /**
      * Maps the data from the database record to the instance properties
      *
-     * @param stdClass $stampcoll module instance
+     * @param stampcoll $stampcoll module instance
      * @param stdClass $record database record from mdl_stamcoll_stamps table
      */
-    public function __construct(stdClass $stampcoll, stdClass $record) {
+    public function __construct(stampcoll $stampcoll, stdClass $record) {
 
         $this->stampcoll = $stampcoll;
 
@@ -106,7 +170,7 @@ class stampcoll_stamp implements renderable {
  */
 abstract class stampcoll_collection {
 
-    /** @var stdClass stampcoll instance */
+    /** @var stampcoll module instance */
     public $stampcoll;
 
     /** @var array internal list of registered users */
@@ -121,9 +185,9 @@ abstract class stampcoll_collection {
     /**
      * The base constructor
      *
-     * @param stdClass $stampcoll module instance
+     * @param stampcoll $stampcoll module instance
      */
-    public function __construct(stdClass $stampcoll) {
+    public function __construct(stampcoll $stampcoll) {
         $this->stampcoll = $stampcoll;
     }
 
@@ -235,10 +299,10 @@ class stampcoll_singleuser_collection extends stampcoll_collection implements re
     /**
      * Registers the holder of the collection
      *
-     * @param stdClass $stamcoll module instance
+     * @param stampcoll $stamcoll module instance
      * @param stdClass $holder user object
      */
-    public function __construct(stdClass $stampcoll, stdClass $holder) {
+    public function __construct(stampcoll $stampcoll, stdClass $holder) {
         parent::__construct($stampcoll);
         $this->register_user($holder);
         $this->holderid = $holder->id;
@@ -280,10 +344,10 @@ class stampcoll_multiuser_collection extends stampcoll_collection implements ren
      *
      * Users data must be provided by subsequential calls of {@see register_user()}.
      *
-     * @param stdClass $stamcoll module instance
+     * @param stampcoll $stamcoll module instance
      * @param array $holderids ordered list of user ids
      */
-    public function __construct(stdClass $stampcoll, array $holderids = array()) {
+    public function __construct(stampcoll $stampcoll, array $holderids = array()) {
         parent::__construct($stampcoll);
         $this->holderids = $holderids;
     }

@@ -43,7 +43,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $src = $this->pix_url('defaultstamp', 'mod_stampcoll');
 
         } else {
-            $src = moodle_url::make_pluginfile_url($this->page->context->id, 'mod_stampcoll', 'image', 0, '/', $stamp->stampcoll->image);
+            $src = moodle_url::make_pluginfile_url($stamp->stampcoll->context->id, 'mod_stampcoll', 'image', 0, '/', $stamp->stampcoll->image);
         }
 
         $attributes = array('src' => $src, 'alt' => s($stamp->text), 'title' => s($stamp->text), 'class' => 'stamp');

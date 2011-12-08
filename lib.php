@@ -143,7 +143,7 @@ function stampcoll_delete_instance($id) {
 function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
     global $DB;
 
-    if ($stamps = $DB->get_records_select('stampcoll_stamps', 'userid=? AND stamcollid=?', array($user->id, $stampcoll->id))) {
+    if ($stamps = $DB->get_records_select('stampcoll_stamps', 'userid=? AND stampcollid=?', array($user->id, $stampcoll->id))) {
         $result = new stdClass();
         $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
         $result->time = 0;  // empty

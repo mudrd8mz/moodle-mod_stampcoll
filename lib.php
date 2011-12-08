@@ -46,6 +46,7 @@ function stampcoll_supports($feature) {
         case FEATURE_MOD_INTRO:         return true;
         case FEATURE_GROUPS:            return true;
         case FEATURE_GRADE_HAS_GRADE:   return false;
+        case FEATURE_BACKUP_MOODLE2:    return true;
         default:                        return null;
     }
 }

@@ -35,6 +35,17 @@ require_course_login($course);
 
 add_to_log($course->id, 'stampcoll', 'view all', 'index.php?id='.$course->id, '');
 
+$coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
+
+$PAGE->set_pagelayout('incourse');
+$PAGE->set_url('/mod/stampcoll/index.php', array('id' => $id));
+$PAGE->set_title(format_string($course->fullname));
+$PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_context($coursecontext);
+
+// output starts here
+echo $OUTPUT->header();
+
 if (!$stampcolls = get_all_instances_in_course('stampcoll', $course)) {
     notice(get_string('noinstances', 'stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));
 }
@@ -44,9 +55,6 @@ $stampcollids = array();
 foreach ($stampcolls as $stampcoll) {
     $stampcollids[] = $stampcoll->id;
 }
-
-// todo cont here
-
 
 $table = new html_table();
 
@@ -66,26 +74,26 @@ if ($course->format == 'weeks') {
 $currentsection = '';
 
 foreach ($stampcolls as $stampcoll) {
-    if (! $cm = get_coursemodule_from_instance('stampcoll', $stampcoll->id)) {
-        error('Course Module ID was incorrect');
-    }
+    $cm = get_coursemodule_from_instance('stampcoll', $stampcoll->id, $course->id, false, MUST_EXIST);
     $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-    include(dirname(__FILE__).'/caps.php');
+    $canviewownstamps = has_capability('mod/stampcoll:viewownstamps', $context, null, false);
+    $canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
+    $canviewsomestamps = $canviewownstamps || $canviewotherstamps;
 
-    if (! $cap_viewsomestamps) {
-        $count_mystamps = get_string('notallowedtoviewstamps', 'stampcoll');
+    if (! $canviewsomestamps) {
+        $countmystamps = get_string('notallowedtoviewstamps', 'stampcoll');
     } else {
-        if (! $allstamps = stampcoll_get_stamps($stampcoll->id)) {
-            $allstamps = array();
-        }
-        $count_totalstamps = count($allstamps);
-        $count_mystamps = 0;
-        foreach ($allstamps as $s) {
+        // todo separated group mode and actual state of enrolments not taken into account here yet
+        $rawstamps = $DB->get_records('stampcoll_stamps', array('stampcollid' => $stampcoll->id), 'timecreated', '*');
+
+        $counttotalstamps = count($rawstamps);
+        $countmystamps = 0;
+        foreach ($rawstamps as $s) {
             if ($s->userid == $USER->id) {
-                $count_mystamps++;
+                $countmystamps++;
             }
         }
-        unset($allstamps);
+        unset($rawstamps);
         unset($s);
     }
 
@@ -99,38 +107,37 @@ foreach ($stampcolls as $stampcoll) {
         }
         $currentsection = $stampcoll->section;
     }
-    
-    //Calculate the href
+
     if (!$stampcoll->visible) {
-        //Show dimmed if the mod is hidden
-        $tt_href = '<a class="dimmed" href="view.php?id='.$stampcoll->coursemodule.'">';
-        $tt_href .= format_string($stampcoll->name, true);
-        $tt_href .= '</a>';
+        $activitylink = html_writer::link(
+            new moodle_url('/mod/stampcoll/view.php', array('id' => $stampcoll->coursemodule)),
+            format_string($stampcoll->name, true),
+            array('class' => 'dimmed'));
     } else {
-        //Show normal if the mod is visible
-        $tt_href = '<a href="view.php?id='.$stampcoll->coursemodule.'">';
-        $tt_href .= format_string($stampcoll->name, true);
-        $tt_href .= '</a>';
+        $activitylink = html_writer::link(
+            new moodle_url('/mod/stampcoll/view.php', array('id' => $stampcoll->coursemodule)),
+            format_string($stampcoll->name, true));
     }
 
-    if (! $cap_viewsomestamps) {
-        $aa = get_string('notallowedtoviewstamps', 'stampcoll');
+    if (! $canviewsomestamps) {
+        $stats = get_string('notallowedtoviewstamps', 'stampcoll');
     } else {
-        $aa = '';
-        if ($cap_viewownstamps) {
-            $aa .= $count_mystamps;
+        $stats = '';
+        if ($canviewownstamps) {
+            $stats .= $countmystamps;
         }
-        if ($cap_viewotherstamps) {
-            $aa .= ' ('. ($count_totalstamps - $count_mystamps) .')';
+        if ($canviewotherstamps) {
+            $stats .= ' ('. ($counttotalstamps - $countmystamps) .')';
         }
     }
-        
+
     if ($course->format == 'weeks' || $course->format == 'topics') {
-        $table->data[] = array ($printsection, $tt_href, $aa);
+        $table->data[] = array ($printsection, $activitylink, $stats);
     } else {
-        $table->data[] = array ($tt_href, $aa);
+        $table->data[] = array ($printsection, $stats);
     }
 }
-print_table($table);
 
-print_footer($course);
+echo $OUTPUT->heading(get_string('modulenameplural', 'stampcoll'), 2);
+echo html_writer::table($table);
+echo $OUTPUT->footer();

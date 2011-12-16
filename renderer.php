@@ -67,7 +67,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             throw new coding_exception('attempt to render stampcoll_singleuser_collection without registered holder');
         }
 
-        $out = $this->output->heading(fullname($holder));
+        $out = $this->output->heading($this->output->user_picture($holder) . ' ' . fullname($holder));
 
         $collected = $collection->list_stamps($holder->id);
         $count     = count($collected);

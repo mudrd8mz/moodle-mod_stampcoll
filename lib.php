@@ -255,13 +255,13 @@ function stampcoll_cron () {
  * @return array Array of unique users
  */
 function stampcoll_get_participants($stampcollid) {
-    global $CFG;
-    $students = get_records_sql("SELECT DISTINCT u.id, u.id
-                                 FROM {$CFG->prefix}user u,
-                                      {$CFG->prefix}stampcoll_stamps s
-                                 WHERE s.stampcollid = '$stampcollid' AND
-                                       u.id = s.userid");
-    return ($students);
+    global $DB;
+
+    $participants = $DB->get_records_sql("SELECT DISTINCT u.id, u.id
+                                            FROM {user} u
+                                            JOIN {stampcoll_stamps} s ON u.id = s.userid
+                                           WHERE s.stampcollid = ?", array($stampcollid));
+    return $participants;
 }
 
 /**

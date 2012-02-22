@@ -176,7 +176,7 @@
     unset($s);
     
 /// Groups and users
-    groups_print_activity_menu($cm, $CFG->wwwroot.'/mod/stampcol/editstamps.php?page='.$page.'&amp;id='.$cm->id);
+    groups_print_activity_menu($cm, $CFG->wwwroot.'/mod/stampcoll/editstamps.php?page='.$page.'&amp;id='.$cm->id);
     $currentgroup = groups_get_activity_group($cm);
     $users = stampcoll_get_users_can_collect($cm, $context, $currentgroup);
     if (!$users) {

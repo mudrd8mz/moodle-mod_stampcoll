@@ -105,7 +105,7 @@
         
     } elseif ($cap_viewotherstamps) {
         /// Display a table of users and their stamps
-        groups_print_activity_menu($cm, $CFG->wwwroot.'/mod/stampcol/view.php?page='.$page.'&amp;id='.$cm->id);
+        groups_print_activity_menu($cm, $CFG->wwwroot.'/mod/stampcoll/view.php?page='.$page.'&amp;id='.$cm->id);
         $currentgroup = groups_get_activity_group($cm);
         $users = stampcoll_get_users_can_collect($cm, $context, $currentgroup);
         if (!$users) {

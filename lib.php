@@ -208,30 +208,155 @@ function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
  * @return boolean
  */
 function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
+    global $CFG, $USER, $DB, $OUTPUT;
+
+    $sql = "SELECT s.id AS stampid, s.userid AS stampownerid, s.timecreated AS stamptimecreated,
+                   cm.id AS cmid
+              FROM {stampcoll} sc
+        INNER JOIN {course_modules} cm ON cm.instance = sc.id
+        INNER JOIN {modules} m ON m.id = cm.module
+        INNER JOIN {stampcoll_stamps} s ON s.stampcollid = sc.id
+        INNER JOIN {user} owner ON s.userid = owner.id
+             WHERE cm.course = ?
+                   AND m.name = 'stampcoll'
+                   AND s.timecreated > ?";
+
+    $rs = $DB->get_recordset_sql($sql, array($course->id, $timestart));
+
+    $modinfo =& get_fast_modinfo($course); // reference needed because we might load the groups
+
+    $users = array();
+
+    foreach ($rs as $activity) {
+        if (!array_key_exists($activity->cmid, $modinfo->cms)) {
+            // this should not happen but just in case
+            continue;
+        }
+
+        $cm = $modinfo->cms[$activity->cmid];
+        if (!$cm->uservisible) {
+            continue;
+        }
+
+
+    }
+    $rs->close();
+
     return false;  //  True if anything was printed, otherwise false
 }
 
 /**
- * Returns all activity in stampcolls since a given time
+ * Prepares the recent activity data
  *
- * @param array $activities sequentially indexed array of objects
- * @param int $index
- * @param int $timestart
- * @param int $courseid
- * @param int $cmid
- * @param int $userid defaults to 0
- * @param int $groupid defaults to 0
+ * @param array $activities sequentially indexed array of objects with the 'cmid' property
+ * @param int $index the index in the $activities to use for the next record
+ * @param int $timestart append activity since this time
+ * @param int $courseid the id of the course we produce the report for
+ * @param int $cmid course module id
+ * @param int $userid check for a particular user's activity only, defaults to 0 (all users)
+ * @param int $groupid check for a particular group's activity only, defaults to 0 (all groups)
  * @return void adds items into $activities and increases $index
  */
 function stampcoll_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $cmid, $userid=0, $groupid=0) {
+    global $DB, $COURSE, $USER;
+
+    if ($COURSE->id == $courseid) {
+        $course = $COURSE;
+    } else {
+        $course = $DB->get_record('course', array('id' => $courseid));
+    }
+
+    $modinfo = get_fast_modinfo($course);
+    $cm = $modinfo->cms[$cmid];
+
+    $sql = "SELECT s.id, s.timemodified, ".user_picture::fields("u", null, "userid")."
+              FROM {stampcoll_stamps} s
+              JOIN {user} u ON s.userid = u.id";
+
+    if ($groupid) {
+        $sql .= " JOIN {groups_members} gm ON gm.userid = u.id";
+    }
+
+    $sql .= " WHERE s.timemodified > ? AND s.stampcollid = ?";
+
+    $params = array($timestart, $cm->instance);
+
+    if ($userid) {
+        $sql .= " AND u.id = ? ";
+        $params[] = $userid;
+    }
+
+    if ($groupid) {
+        $sql .= " AND gm.groupid = ? ";
+        $params[] = $groupid;
+    }
+
+    $stamps = $DB->get_records_sql($sql, $params);
+
+    if (empty($stamps)) {
+        return;
+    }
+
+    $context         = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $accessallgroups = has_capability('moodle/site:accessallgroups', $context);
+    $viewownstamps   = has_capability('mod/stampcoll:viewownstamps', $context);
+    $viewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
+    $groupmode       = groups_get_activity_groupmode($cm, $course);
+
+    foreach ($stamps as $stamp) {
+        if ($stamp->userid == $USER->id) {
+            if (!$viewownstamps) {
+                continue;
+            }
+
+        } else {
+            if (!$viewotherstamps) {
+                continue;
+            }
+
+            if ($groupmode == SEPARATEGROUPS and !$accessallgroups) {
+                $usersgroups = groups_get_all_groups($course->id, $stamp->userid, $cm->groupingid);
+                if (!is_array($usersgroups)) {
+                    continue;
+                }
+                $usersgroups = array_keys($usersgroups);
+                $intersect = array_intersect($usersgroups, $modinfo->groups[$cm->id]);
+                if (empty($intersect)) {
+                    continue;
+                }
+            }
+        }
+
+        $tmpactivity = (object)array(
+            'type' => 'stampcoll',
+            'cmid' => $cm->id,
+            'name' => format_string($cm->name, true),
+            'sectionnum' => $cm->sectionnum,
+            'stamp' => (object)array(
+                'id' => $stamp->id,
+                'timemodified' => $stamp->timemodified,
+            ),
+            'user' => user_picture::unalias($stamp, null, 'userid')
+        );
+
+        $activities[$index++] = $tmpactivity;
+    }
 }
 
 /**
  * Prints single activity item prepared by {@see stampcoll_get_recent_mod_activity()}
  *
+ * @param stdClass $activity as prepared by {@link stampcoll_get_recent_mod_activity()}
+ * @param int $courseid
+ * @param bool $detail
+ * @param array $modnames list of activity module localized names, indexed by the module's folder name
+ * @param bool $viewfullnames does the $USER have the capability to view full names here
  * @return void
  */
 function stampcoll_print_recent_mod_activity($activity, $courseid, $detail, $modnames, $viewfullnames) {
+    global $OUTPUT;
+
+    echo $OUTPUT->user_picture($activity->user, array('courseid' => $courseid));
 }
 
 /**
@@ -241,7 +366,7 @@ function stampcoll_print_recent_mod_activity($activity, $courseid, $detail, $mod
  *
  * @return boolean
  */
-function stampcoll_cron () {
+function stampcoll_cron() {
     return true;
 }
 

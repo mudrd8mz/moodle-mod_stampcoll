@@ -38,6 +38,15 @@ $string['givenby'] = 'From: {$a}';
 $string['givento'] = 'To: {$a}';
 $string['managestamps'] = 'Manage stamps';
 $string['modulename'] = 'Stamp collection';
+$string['modulename_help'] = 'The Stamp collection module allows to give so called stamps (picture with a comment) to users so they collect these stamps. Students can be allowed to give stamps to other students and stamps may be given to teachers, too.
+
+Teachers can setup the module to show all stamps to all students, to show stamps only to the individual student to whom it was awarded or to hide stamps completely.
+
+The activity can be used in many ways, such as:
+
+* motivative bonus marks
+* absence marks
+* certification records';
 $string['modulenameplural'] = 'Stamp collections';
 $string['noinstances'] = 'There are no stamp collections in this course';
 $string['nocollectingusers'] = 'There are no users who can collect stamps in this collection';

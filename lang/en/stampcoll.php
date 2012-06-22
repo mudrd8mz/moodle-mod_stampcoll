@@ -52,6 +52,7 @@ $string['perpage'] = 'Users per page';
 $string['pluginadministration'] = 'Stamp collection administration';
 $string['pluginname'] = 'Stamp collection';
 $string['showupdateforms'] = 'Show forms to update stamps';
+$string['stampcoll:addinstance'] = 'Add a new stamp collection';
 $string['stampcoll:collectstamps'] = 'Collect stamps';
 $string['stampcoll:givestamps'] = 'Give stamps';
 $string['stampcoll:managestamps'] = 'Manage stamps';

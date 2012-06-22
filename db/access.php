@@ -42,6 +42,18 @@ $capabilities = array(
         )
     ),
 
+    // add a new stampcollection to the course
+    'mod/stampcoll:addinstance' => array(
+        'riskbitmask' => RISK_XSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+        'clonepermissionsfrom' => 'moodle/course:manageactivities'
+    ),
+
     // can be given a stamp
     'mod/stampcoll:collectstamps' => array(
         'captype' => 'write',

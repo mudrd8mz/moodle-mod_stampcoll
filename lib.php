@@ -223,7 +223,7 @@ function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
 
     $rs = $DB->get_recordset_sql($sql, array($course->id, $timestart));
 
-    $modinfo =& get_fast_modinfo($course); // reference needed because we might load the groups
+    $modinfo = get_fast_modinfo($course);
 
     $users = array();
 

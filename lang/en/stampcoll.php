@@ -18,15 +18,14 @@
 /**
  * Strings for Stamp collection module
  *
- * @package    mod
- * @subpackage stampcoll
+ * @package    mod_stampcoll
  * @copyright  2007 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['addstamp'] = 'Add new stamp';
+$string['addstamp'] = 'Add a new stamp';
 $string['addstampbutton'] = 'Add';
 $string['confirmdel'] = 'Do you really want to delete this stamp?';
 $string['deletestamp'] = 'Delete';

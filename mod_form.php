@@ -18,8 +18,7 @@
 /**
  * This file defines the main Stamp collection module setting form
  *
- * @package    mod
- * @subpackage stampcoll
+ * @package    mod_stampcoll
  * @copyright  2008 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

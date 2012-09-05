@@ -18,8 +18,7 @@
 /**
  * Keeps track of upgrades to the Stamp collection module
  *
- * @package    mod
- * @subpackage stampcoll
+ * @package    mod_stampcoll
  * @copyright  2007 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -18,8 +18,7 @@
 /**
  * Lists all Stamp collection instances in the course
  *
- * @package    mod
- * @subpackage stampcoll
+ * @package    mod_stampcoll
  * @copyright  2007 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

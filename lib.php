@@ -21,8 +21,7 @@
  * All the core Moodle functions, neeeded to allow the module to work
  * in Moodle should be placed here.
  *
- * @package    mod
- * @subpackage stampcoll
+ * @package    mod_stampcoll
  * @copyright  2007 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -60,8 +60,7 @@ class mod_stampcoll_mod_form extends moodleform_mod {
         $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
             'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
         $mform->addElement('filemanager', 'image', get_string('stampimage', 'stampcoll'), null, $imageoptions);
-
-        $mform->addElement('static', 'stampimageinfo', '', get_string('stampimageinfo', 'stampcoll') );
+        $mform->addHelpButton('image', 'stampimage', 'stampcoll');
 
         // Display users with no stamps
         $mform->addElement('selectyesno', 'displayzero', get_string('displayzero', 'stampcoll'));

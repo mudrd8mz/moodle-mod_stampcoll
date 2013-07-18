@@ -1,3 +1,15 @@
+v2.5.0
+======
+
+* Fixed XMLDB/SQL upgrade from 1.9.x
+
+
+v2.4.1
+======
+
+* Fixed XMLDB/SQL upgrade from 1.9.x
+
+
 v2.4.0
 ======
 

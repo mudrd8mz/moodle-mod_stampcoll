@@ -186,7 +186,15 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
         $sortbycount = $this->helper_sortable_heading(get_string('numberofstamps', 'stampcoll'),
             'count', $collection->sortedby, $collection->sortedhow);
 
-        $table->head = array('', $sortbyname, $sortbycount, 'Text', 'Given on', 'Given by', 'Action'); // TODO localize
+        $table->head = array(
+            '',
+            $sortbyname,
+            $sortbycount,
+            get_string('stamptext', 'mod_stampcoll'),
+            get_string('stampgivenon', 'mod_stampcoll'),
+            get_string('stampgivenby', 'mod_stampcoll'),
+            get_string('action')
+        );
 
         foreach ($holders as $holder) {
             $picture    = $this->output->user_picture($holder);
@@ -197,7 +205,10 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $collected  = $collection->list_stamps($holder->id);
             $count      = count($collected);
 
-            $textform = html_writer::tag('textarea', '', array('name' => 'addnewstamp['.$holder->id.']'));
+            $textform = html_writer::tag('textarea', '', array(
+                'placeholder' => get_string('addstamp', 'mod_stampcoll'),
+                'name' => 'addnewstamp['.$holder->id.']'
+            ));
 
             $row = new html_table_row(array($picture, $fullname, $count, $textform));
             $row->attributes['class'] = 'holderinfo';

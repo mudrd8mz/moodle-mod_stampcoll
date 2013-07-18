@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $module->component  = 'mod_stampcoll';
 $module->release    = 'DEV';
-$module->version    = 2013040900;
-$module->requires   = 2012120300; // Moodle v2.4.0
+$module->version    = 2013071900;
+$module->requires   = 2013051400; // Moodle v2.5.0
 $module->maturity   = MATURITY_ALPHA;
 $module->cron       = 0;

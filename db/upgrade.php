@@ -189,7 +189,7 @@ function xmldb_stampcoll_upgrade($oldversion = 0) {
      */
     if ($oldversion < 2011120708) {
         $table = new xmldb_table('stampcoll_stamps');
-        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'timecreated');
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'text');
         $dbman->change_field_unsigned($table, $field);
         upgrade_mod_savepoint(true, 2011120708, 'stampcoll');
     }
@@ -199,7 +199,7 @@ function xmldb_stampcoll_upgrade($oldversion = 0) {
      */
     if ($oldversion < 2011120709) {
         $table = new xmldb_table('stampcoll_stamps');
-        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'timecreated');
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'text');
         $dbman->change_field_default($table, $field);
         upgrade_mod_savepoint(true, 2011120709, 'stampcoll');
     }

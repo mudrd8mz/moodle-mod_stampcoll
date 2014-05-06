@@ -132,7 +132,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $picture    = $this->output->user_picture($holder);
             $fullname   = fullname($holder);
             $fullname   = html_writer::link(
-                            new moodle_url($this->page->url, array('view' => 'single', 'userid' => $holder->id)),
+                            new moodle_url($collection->stampcoll->view_url(), array('view' => 'single', 'userid' => $holder->id)),
                             $fullname);
             $collected  = $collection->list_stamps($holder->id);
             $count      = count($collected);
@@ -200,7 +200,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $picture    = $this->output->user_picture($holder);
             $fullname   = fullname($holder);
             $fullname   = html_writer::link(
-                            new moodle_url($this->page->url, array('view' => 'single', 'userid' => $holder->id)),
+                            new moodle_url($collection->stampcoll->view_url(), array('view' => 'single', 'userid' => $holder->id)),
                             $fullname);
             $collected  = $collection->list_stamps($holder->id);
             $count      = count($collected);

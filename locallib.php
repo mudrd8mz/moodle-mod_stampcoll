@@ -92,6 +92,13 @@ class stampcoll {
             $this->context = $context;
         }
     }
+
+    /**
+     * @return moodle_url to view the stampcoll instance
+     */
+    public function view_url() {
+        return new moodle_url('/mod/stampcoll/view.php', array('id' => $this->cm->id));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -87,7 +87,7 @@ class stampcoll {
         $this->cm = $cm;
         $this->course = $course;
         if (is_null($context)) {
-            $this->context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
+            $this->context = context_module::instance($this->cm->id);
         } else {
             $this->context = $context;
         }

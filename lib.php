@@ -63,7 +63,7 @@ function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mfo
     $stampcoll->timemodified = time();
     $stampcoll->image = null;
 
-    $context = get_context_instance(CONTEXT_MODULE, $stampcoll->coursemodule);
+    $context = context_module::instance($stampcoll->coursemodule);
     $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
         'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
     if ($draftitemid = file_get_submitted_draft_itemid('image')) {
@@ -93,7 +93,7 @@ function stampcoll_update_instance(stdClass $stampcoll, mod_stampcoll_mod_form $
     $stampcoll->id = $stampcoll->instance;
     $stampcoll->timemodified = time();
 
-    $context = get_context_instance(CONTEXT_MODULE, $stampcoll->coursemodule);
+    $context = context_module::instance($stampcoll->coursemodule);
     $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
         'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
     if ($draftitemid = file_get_submitted_draft_itemid('image')) {
@@ -296,7 +296,7 @@ function stampcoll_get_recent_mod_activity(&$activities, &$index, $timestart, $c
         return;
     }
 
-    $context         = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context         = context_module::instance($cm->id);
     $accessallgroups = has_capability('moodle/site:accessallgroups', $context);
     $viewownstamps   = has_capability('mod/stampcoll:viewownstamps', $context);
     $viewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
@@ -474,7 +474,7 @@ function stampcoll_pluginfile($course, $cm, $context, $filearea, array $args, $f
  */
 function stampcoll_extend_navigation(navigation_node $navref, stdclass $course, stdclass $module, cm_info $cm) {
 
-    $context            = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context            = context_module::instance($cm->id);
     $canviewownstamps   = has_capability('mod/stampcoll:viewownstamps', $context);
     $canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
 

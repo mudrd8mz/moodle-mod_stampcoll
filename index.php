@@ -34,7 +34,7 @@ require_course_login($course);
 
 add_to_log($course->id, 'stampcoll', 'view all', 'index.php?id='.$course->id, '');
 
-$coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
+$coursecontext = context_course::instance($course->id);
 
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_url('/mod/stampcoll/index.php', array('id' => $id));
@@ -74,7 +74,7 @@ $currentsection = '';
 
 foreach ($stampcolls as $stampcoll) {
     $cm = get_coursemodule_from_instance('stampcoll', $stampcoll->id, $course->id, false, MUST_EXIST);
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+    $context = context_module::instance($cm->id);
     $canviewownstamps = has_capability('mod/stampcoll:viewownstamps', $context, null, false);
     $canviewotherstamps = has_capability('mod/stampcoll:viewotherstamps', $context);
     $canviewsomestamps = $canviewownstamps || $canviewotherstamps;

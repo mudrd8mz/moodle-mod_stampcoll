@@ -80,6 +80,7 @@ if ($delete) {
     if (!$confirmed) {
         // let the user confirm
         echo $output->header();
+        echo $output->heading(format_string($stampcoll->name, false, array('context' => $stampcoll->context)));
         echo $output->confirm($output->render($stamp) . ' ' . get_string('deletestampconfirm', 'mod_stampcoll'),
             new moodle_url($PAGE->url, array('delete' => $stamp->id, 'confirmed' => 1)),
             $PAGE->url);
@@ -169,6 +170,8 @@ if ($data = data_submitted()) {
 }
 
 echo $output->header();
+
+echo $output->heading(format_string($stampcoll->name, false, array('context' => $stampcoll->context)));
 
 $PAGE->url->param('sortby', $sortby);
 $PAGE->url->param('sorthow', $sorthow);

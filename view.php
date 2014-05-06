@@ -106,6 +106,8 @@ $output = $PAGE->get_renderer('mod_stampcoll');
 
 echo $output->header();
 
+echo $output->heading(format_string($stampcoll->name, false, array('context' => $stampcoll->context)));
+
 if (trim($stampcoll->intro)) {
     echo $output->box(format_module_intro('stampcoll', $stampcoll, $cmid), 'generalbox');
 }

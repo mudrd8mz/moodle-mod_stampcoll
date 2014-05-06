@@ -66,19 +66,19 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             throw new coding_exception('attempt to render stampcoll_singleuser_collection without registered holder');
         }
 
-        $out = $this->output->heading($this->output->user_picture($holder) . ' ' . fullname($holder));
+        $out = $this->output->heading($this->output->user_picture($holder) . ' ' . fullname($holder), 3);
 
         $collected = $collection->list_stamps($holder->id);
         $count     = count($collected);
 
         if ($count == 0) {
-            $out .= $this->output->heading(get_string('nostampscollected', 'stampcoll'), 3);
+            $out .= $this->output->heading(get_string('nostampscollected', 'stampcoll'), 4);
 
         } else if ($holder->id == $USER->id) {
-            $out .= $this->output->heading(get_string('numberofyourstamps', 'stampcoll', $count), 3);
+            $out .= $this->output->heading(get_string('numberofyourstamps', 'stampcoll', $count), 4);
 
         } else {
-            $out .= $this->output->heading(get_string('numberofcollectedstamps', 'stampcoll', $count), 3);
+            $out .= $this->output->heading(get_string('numberofcollectedstamps', 'stampcoll', $count), 4);
         }
 
         if (!empty($collected)) {
@@ -103,7 +103,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
         $holders = $collection->list_stamp_holders();
 
         if (empty($holders)) {
-            return $this->output->heading(get_string('nostampsincollection', 'stampcoll'), 3);
+            return $this->output->heading(get_string('nostampsincollection', 'stampcoll'), 4);
         }
 
         $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page, $collection->perpage, $this->page->url, 'page'));

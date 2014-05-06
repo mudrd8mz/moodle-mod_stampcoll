@@ -137,6 +137,6 @@ foreach ($stampcolls as $stampcoll) {
     }
 }
 
-echo $OUTPUT->heading(get_string('modulenameplural', 'stampcoll'), 2);
+echo $OUTPUT->heading(get_string('modulenameplural', 'stampcoll'));
 echo html_writer::table($table);
 echo $OUTPUT->footer();

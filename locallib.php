@@ -99,6 +99,13 @@ class stampcoll {
     public function view_url() {
         return new moodle_url('/mod/stampcoll/view.php', array('id' => $this->cm->id));
     }
+
+    /**
+     * @return moodle_url to manage stamps in this stampcoll instance
+     */
+    public function managestamps_url() {
+        return new moodle_url('/mod/stampcoll/managestamps.php', array('cmid' => $this->cm->id));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

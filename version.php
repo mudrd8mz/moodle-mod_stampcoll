@@ -25,9 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$module->component  = 'mod_stampcoll';
-$module->release    = 'v2.6.0';
-$module->version    = 2014050600;
-$module->requires   = 2013101800; // Moodle 2.6
-$module->maturity   = MATURITY_STABLE;
-$module->cron       = 0;
+$plugin->component  = 'mod_stampcoll';
+$plugin->release    = 'v2.6.0';
+$plugin->version    = 2014050600;
+$plugin->requires   = 2013101800; // Moodle 2.6
+$plugin->maturity   = MATURITY_STABLE;
+$plugin->cron       = 0;
+$plugin->dependencies = array(
+    'mod_stampcoll' => 2011120716,
+);

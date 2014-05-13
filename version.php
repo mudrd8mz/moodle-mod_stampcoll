@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $plugin->component  = 'mod_stampcoll';
 $plugin->release    = 'v2.6.0';
 $plugin->version    = 2014050600;
-$plugin->requires   = 2013101800; // Moodle 2.6
+$plugin->requires   = 2013101800;
 $plugin->maturity   = MATURITY_STABLE;
 $plugin->cron       = 0;
 $plugin->dependencies = array(

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -41,34 +40,29 @@ class stampcoll_stamp_form extends moodleform {
         $mform = $this->_form;
         $data  = $this->_customdata;
 
-        //----------------------------------------------------------------------
         if (empty($data['current'])) {
-            // the form is used to add a new stamp
+            // The form is used to add a new stamp.
             $mform->addElement('header', 'stampform', get_string('addstamp', 'stampcoll'));
         } else {
-            // the form is used to edit some existing stamp
+            // The form is used to edit some existing stamp.
             $mform->addElement('header', 'stampform', get_string('editstamp', 'stampcoll'));
         }
 
-        //----------------------------------------------------------------------
         if (!empty($data['userfrom'])) {
-            // we have the giver's details available - let us display them
+            // We have the giver's details available - let us display them.
             $mform->addElement('static', 'from',
                 get_string('from'),
                 $OUTPUT->user_picture($data['userfrom'], array('size' => 16)).' '.fullname($data['userfrom']));
         }
 
-        //----------------------------------------------------------------------
         $mform->addElement('textarea', 'text', get_string('stamptext', 'stampcoll'), array('cols' => 40, 'rows' => 5));
         $mform->setType('text', PARAM_RAW);
 
-        //----------------------------------------------------------------------
         $mform->addGroup(array(
             $mform->createElement('submit', 'submit', get_string('addstampbutton', 'stampcoll')),
             $mform->createElement('cancel', 'cancel', get_string('cancel'))),
             'controlbuttons', '&nbsp;', array(' '), false);
 
-        //----------------------------------------------------------------------
         $mform->addElement('hidden', 'userto');
         $mform->setType('userto', PARAM_INT);
 

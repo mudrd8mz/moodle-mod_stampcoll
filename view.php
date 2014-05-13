@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -32,14 +31,14 @@ require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/addstamp_form.php');
 
-$cmid       = required_param('id', PARAM_INT);                                  // course module id
-$view       = optional_param('view', 'all', PARAM_ALPHA);                       // display mode all|own|single
-$userid     = optional_param('userid', null, PARAM_INT);                        // view this single user
-$sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                // sort by column
-$sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // sort direction
-$page       = optional_param('page', 0, PARAM_INT);                             // page
-$updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // is the preferences form being saved
-$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // users per page preference
+$cmid       = required_param('id', PARAM_INT);                                  // Course module id.
+$view       = optional_param('view', 'all', PARAM_ALPHA);                       // Display mode all|own|single.
+$userid     = optional_param('userid', null, PARAM_INT);                        // View this single user.
+$sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                // Sort by this column.
+$sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // Sort using this direction.
+$page       = optional_param('page', 0, PARAM_INT);                             // Show this page.
+$updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // Is the preferences form being saved?
+$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // The 'Users per page' preference.
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -116,9 +115,7 @@ if (!$canviewsomestamps) {
     notice(get_string('notallowedtoviewstamps', 'mod_stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// View own stamps                                                            //
-////////////////////////////////////////////////////////////////////////////////
+// View own stamps.
 
 if ($view == 'own') {
 
@@ -126,7 +123,7 @@ if ($view == 'own') {
         throw new coding_exception('error in permission evaluation');
     }
 
-    // construct the sql returning all stamp info to display
+    // Construct the sql returning all stamp info to display.
     $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext,
                    s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                    user_picture::fields('gu', null, 'giverid', 'giver')."
@@ -136,7 +133,7 @@ if ($view == 'own') {
           ORDER BY s.timecreated";
     $params = array('stampcollid' => $stampcoll->id, 'holderid' => $USER->id);
 
-    // prepare the renderable collection
+    // Prepare the renderable collection.
     $collection = new stampcoll_singleuser_collection($stampcoll, $USER);
 
     $rs = $DB->get_recordset_sql($sql, $params);
@@ -160,11 +157,9 @@ if ($view == 'own') {
 
     echo $output->render($collection);
 
-////////////////////////////////////////////////////////////////////////////////
-// View someone else's stamps                                                 //
-////////////////////////////////////////////////////////////////////////////////
-
 } else if ($view == 'single') {
+
+    // View someone else's stamps.
 
     if (!$canviewotherstamps) {
         throw new coding_exception('error in permission evaluation');
@@ -176,7 +171,7 @@ if ($view == 'own') {
         notice(get_string('usernotenrolled', 'stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));
     }
 
-    // construct the sql returning all stamp info to display
+    // Construct the sql returning all stamp info to display.
     $sql = "SELECT s.id AS stampid, s.userid AS holderid, s.text AS stamptext,
                    s.timecreated AS stamptimecreated, s.timemodified AS stamptimemodified,".
                    user_picture::fields('gu', null, 'giverid', 'giver')."
@@ -187,7 +182,7 @@ if ($view == 'own') {
     $params = array('stampcollid' => $stampcoll->id, 'holderid' => $user->id);
 
 
-    // prepare the renderable collection
+    // Prepare the renderable collection.
     $collection = new stampcoll_singleuser_collection($stampcoll, $user);
 
     $rs = $DB->get_recordset_sql($sql, $params);
@@ -211,7 +206,7 @@ if ($view == 'own') {
 
     echo $output->render($collection);
 
-    // append a form to give a new stamp
+    // Append a form to give a new stamp.
     if (has_capability('mod/stampcoll:collectstamps', $stampcoll->context, $user, false) and
         has_capability('mod/stampcoll:givestamps', $stampcoll->context, $USER)) {
 
@@ -230,11 +225,9 @@ if ($view == 'own') {
         $form->display();
     }
 
-////////////////////////////////////////////////////////////////////////////////
-// View all stamps                                                            //
-////////////////////////////////////////////////////////////////////////////////
-
 } else if ($view == 'all') {
+
+    // View all stamps.
 
     if (!$canviewotherstamps) {
         throw new coding_exception('error in permission evaluation');
@@ -254,23 +247,24 @@ if ($view == 'own') {
 
         if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $stampcoll->context)) {
             if (!groups_is_member($groupid)) {
-                // this should not happen but...
-                notice(get_string('groupusernotmember', 'core_error'), new moodle_url('/course/view.php', array('id' => $course->id)));
+                // This should not happen but...
+                notice(get_string('groupusernotmember', 'core_error'),
+                    new moodle_url('/course/view.php', array('id' => $course->id)));
             }
         }
     }
 
-    // get the sql returning all actively enrolled users who can collect stamps
+    // Get the sql returning all actively enrolled users who can collect stamps.
     list($enrolsql, $enrolparams) = get_enrolled_sql($stampcoll->context, 'mod/stampcoll:collectstamps', $groupid, true);
 
-    // determine how to join user and stamps tables
+    // Determine how to join user and stamps tables.
     if ($stampcoll->displayzero) {
         $jointype = 'LEFT';
     } else {
         $jointype = 'INNER';
     }
 
-    // in the first query, get the list of users to be displayed
+    // In the first query, get the list of users to be displayed.
     $sql = "SELECT COUNT(*)
               FROM (SELECT DISTINCT(u.id)
                       FROM {user} u
@@ -281,7 +275,7 @@ if ($view == 'own') {
 
     $totalcount = $DB->count_records_sql($sql, $params);
 
-    // in the second query, get the list of user ids to display based on the sorting and paginating
+    // In the second query, get the list of user ids to display based on the sorting and paginating.
     $sql = "SELECT u.id, u.firstname, u.lastname, COUNT(s.id) AS count
               FROM {user} u
               JOIN ($enrolsql) eu ON u.id = eu.id
@@ -295,7 +289,7 @@ if ($view == 'own') {
 
     $userids = array_keys($DB->get_records_sql($sql, $params, $page * $perpage, $perpage));
 
-    // prepare the renderable collection
+    // Prepare the renderable collection.
     $collection             = new stampcoll_multiuser_collection($stampcoll, $userids);
     $collection->sortedby   = $sortby;
     $collection->sortedhow  = $sorthow;
@@ -304,7 +298,7 @@ if ($view == 'own') {
     $collection->totalcount = $totalcount;
 
     if ($userids) {
-        // in the third query, get all stamps info to display
+        // In the third query, get all stamps info to display.
         list($holdersql, $holderparam) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         $sql = "SELECT ".user_picture::fields('hu', null, 'holderid', 'holder').",

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -27,8 +26,8 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
 
-    // can see the main page of the module instance and basic information
-    // about it (like the introduction)
+    // Can see the main page of the module instance and basic information
+    // about it (like the introduction).
     'mod/stampcoll:view' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -41,7 +40,7 @@ $capabilities = array(
         )
     ),
 
-    // add a new stampcollection to the course
+    // Add a new stamp collection to the course.
     'mod/stampcoll:addinstance' => array(
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
@@ -53,7 +52,7 @@ $capabilities = array(
         'clonepermissionsfrom' => 'moodle/course:manageactivities'
     ),
 
-    // can be given a stamp
+    // Can be given a stamp.
     'mod/stampcoll:collectstamps' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
@@ -62,7 +61,7 @@ $capabilities = array(
         )
     ),
 
-    // can give a stamp
+    // Can give a stamp.
     'mod/stampcoll:givestamps' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
@@ -72,7 +71,7 @@ $capabilities = array(
         )
     ),
 
-    // view stamps of other users
+    // View stamps of other users.
     'mod/stampcoll:viewotherstamps' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -83,7 +82,7 @@ $capabilities = array(
     ),
 
 
-    // view stamps given to themselves
+    // View stamps given to themselves.
     'mod/stampcoll:viewownstamps' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -94,7 +93,7 @@ $capabilities = array(
         )
     ),
 
-    // can edit and delete all stamps
+    // Can edit and delete all stamps.
     'mod/stampcoll:managestamps' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,

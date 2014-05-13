@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -36,7 +35,7 @@ function xmldb_stampcoll_upgrade($oldversion = 0) {
 
     $dbman = $DB->get_manager();
 
-    // The module must have version 2011120716 (release v2.0.0) at this point
+    // The module must have version 2011120716 (release v2.0.0) at this point.
 
     return true;
 }

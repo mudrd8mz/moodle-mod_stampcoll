@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,14 +25,14 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
-$cmid       = required_param('cmid', PARAM_INT);                                // course module id
-$sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                // sort by column
-$sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // sort direction
-$page       = optional_param('page', 0, PARAM_INT);                             // page
-$updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // is the preferences form being saved
-$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // users per page preference
-$delete     = optional_param('delete', null, PARAM_INT);                        // stamp id to delete
-$confirmed  = optional_param('confirmed', false, PARAM_BOOL);                   // confirm the operation
+$cmid       = required_param('cmid', PARAM_INT);                                // Course module id.
+$sortby     = optional_param('sortby', 'lastname', PARAM_ALPHA);                // Sort by column.
+$sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);                    // Sort direction.
+$page       = optional_param('page', 0, PARAM_INT);                             // Page.
+$updatepref = optional_param('updatepref', false, PARAM_BOOL);                  // Is the preferences form being saved?
+$perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  // 'Users per page' preference.
+$delete     = optional_param('delete', null, PARAM_INT);                        // Stamp id to delete.
+$confirmed  = optional_param('confirmed', false, PARAM_BOOL);                   // Confirm the operation.
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -74,11 +73,11 @@ if ($updatepref) {
 }
 
 if ($delete) {
-    // make sure the stamp is from this collection
+    // Make sure the stamp is from this collection.
     $stamp = $DB->get_record('stampcoll_stamps', array('id' => $delete, 'stampcollid' => $stampcoll->id), '*', MUST_EXIST);
     $stamp = new stampcoll_stamp($stampcoll, $stamp);
     if (!$confirmed) {
-        // let the user confirm
+        // Let the user confirm.
         echo $output->header();
         echo $output->heading(format_string($stampcoll->name, false, array('context' => $stampcoll->context)));
         echo $output->confirm($output->render($stamp) . ' ' . get_string('deletestampconfirm', 'mod_stampcoll'),
@@ -97,10 +96,10 @@ if ($delete) {
 if ($data = data_submitted()) {
     require_sesskey();
     $now = time();
-    // get the list of userids of users who are allowed to collect stamps here
+    // Get the list of userids of users who are allowed to collect stamps here.
     $holderids = array_keys(get_enrolled_users($stampcoll->context, 'mod/stampcoll:collectstamps', 0, 'u.id'));
 
-    // add new stamps
+    // Add new stamps.
     if (!empty($data->addnewstamp) and is_array($data->addnewstamp)) {
         foreach ($data->addnewstamp as $holderid => $text) {
             $holderid = clean_param($holderid, PARAM_INT);
@@ -114,7 +113,7 @@ if ($data = data_submitted()) {
             }
             $text = trim($text);
             if ($text === '') {
-                // in the bulk mode, only stamps with text can be added
+                // In the bulk mode, only stamps with text can be added.
                 continue;
             }
 
@@ -130,14 +129,15 @@ if ($data = data_submitted()) {
         }
     }
 
-    // update existing stamps
+    // Update existing stamps.
     if (!empty($data->stampnewtext) and is_array($data->stampnewtext)) {
 
-        // get the list of stamps that can be modified via this bulk operation
+        // Get the list of stamps that can be modified via this bulk operation.
         list($subsql1, $params1) = $DB->get_in_or_equal(array_keys($data->stampnewtext));
         list($subsql2, $params2) = $DB->get_in_or_equal($holderids);
         $params = array_merge(array($stampcoll->id), $params1, $params2);
-        $stamps = $DB->get_records_select('stampcoll_stamps', "stampcollid = ? AND id $subsql1 AND userid $subsql2", $params, '', 'id, userid, text');
+        $stamps = $DB->get_records_select('stampcoll_stamps',
+            "stampcollid = ? AND id $subsql1 AND userid $subsql2", $params, '', 'id, userid, text');
         $stampids = array_keys($stamps);
 
         foreach ($data->stampnewtext as $stampid => $text) {
@@ -187,16 +187,16 @@ if ($groupmode == NOGROUPS) {
 
     if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $stampcoll->context)) {
         if (!groups_is_member($groupid)) {
-            // this should not happen but...
+            // This should not happen but...
             notice(get_string('groupusernotmember', 'core_error'), new moodle_url('/course/view.php', array('id' => $course->id)));
         }
     }
 }
 
-// get the sql returning all actively enrolled users who can collect stamps
+// Get the sql returning all actively enrolled users who can collect stamps.
 list($enrolsql, $enrolparams) = get_enrolled_sql($stampcoll->context, 'mod/stampcoll:collectstamps', $groupid, true);
 
-// in the first query, get the list of users to be displayed
+// In the first query, get the list of users to be displayed.
 $sql = "SELECT COUNT(*)
           FROM (SELECT DISTINCT(u.id)
                   FROM {user} u
@@ -207,7 +207,7 @@ $params = array_merge($enrolparams, array('stampcollid' => $stampcoll->id));
 
 $totalcount = $DB->count_records_sql($sql, $params);
 
-// in the second query, get the list of user ids to display based on the sorting and paginating
+// In the second query, get the list of user ids to display based on the sorting and paginating.
 $sql = "SELECT u.id, u.firstname, u.lastname, COUNT(s.id) AS count
           FROM {user} u
           JOIN ($enrolsql) eu ON u.id = eu.id
@@ -221,7 +221,7 @@ $perpage = get_user_preferences('stampcoll_perpage', stampcoll::USERS_PER_PAGE);
 
 $userids = array_keys($DB->get_records_sql($sql, $params, $page * $perpage, $perpage));
 
-// prepare the renderable collection
+// Prepare the renderable collection.
 $collection             = new stampcoll_management_collection($stampcoll, $userids);
 $collection->sortedby   = $sortby;
 $collection->sortedhow  = $sorthow;
@@ -230,7 +230,7 @@ $collection->perpage    = $perpage;
 $collection->totalcount = $totalcount;
 
 if ($userids) {
-    // in the third query, get all stamps info to display
+    // In the third query, get all stamps info to display.
     list($holdersql, $holderparam) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
     $sql = "SELECT ".user_picture::fields('hu', null, 'holderid', 'holder').",

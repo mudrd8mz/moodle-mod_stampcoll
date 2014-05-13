@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -42,7 +41,8 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $src = $this->pix_url('defaultstamp', 'mod_stampcoll');
 
         } else {
-            $src = moodle_url::make_pluginfile_url($stamp->stampcoll->context->id, 'mod_stampcoll', 'image', 0, '/', $stamp->stampcoll->image);
+            $src = moodle_url::make_pluginfile_url($stamp->stampcoll->context->id, 'mod_stampcoll',
+                'image', 0, '/', $stamp->stampcoll->image);
         }
 
         $attributes = array('src' => $src, 'alt' => s($stamp->text), 'title' => s($stamp->text), 'class' => 'stamp');
@@ -106,7 +106,8 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             return $this->output->heading(get_string('nostampsincollection', 'stampcoll'), 4);
         }
 
-        $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page, $collection->perpage, $this->page->url, 'page'));
+        $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page,
+            $collection->perpage, $this->page->url, 'page'));
 
         $table = new html_table();
         $table->attributes['class'] = 'collection multiuser';
@@ -168,7 +169,8 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             return $this->output->heading(get_string('nocollectingusers', 'stampcoll'), 3);
         }
 
-        $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page, $collection->perpage, $this->page->url, 'page'));
+        $htmlpagingbar = $this->render(new paging_bar($collection->totalcount, $collection->page,
+            $collection->perpage, $this->page->url, 'page'));
 
         $table = new html_table();
         $table->attributes['class'] = 'collection management';
@@ -215,7 +217,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             foreach ($row->cells as $cell) {
                 $cell->rowspan = $count + 1;
             }
-            // make the cell for adding new stamp spanning over stamp-info cells
+            // Make the cell for adding new stamp spanning over stamp-info cells.
             $cell->rowspan = 1;
             $cell->colspan = 4;
             $table->data[] = $row;
@@ -237,7 +239,8 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
                         $newtext.$oldtext,
                         userdate($stamp->timecreated, get_string('strftimedate', 'core_langconfig')),
                         $giver,
-                        html_writer::link(new moodle_url($collection->stampcoll->managestamps_url(), array('delete' => $stamp->id)), get_string('deletestamp', 'mod_stampcoll')),
+                        html_writer::link(new moodle_url($collection->stampcoll->managestamps_url(),
+                                          array('delete' => $stamp->id)), get_string('deletestamp', 'mod_stampcoll')),
                     ));
                     $row->attributes['class'] = 'stampinfo';
                     $table->data[] = $row;
@@ -256,10 +259,6 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
 
         return $htmlpagingbar . $htmlform . $htmlpagingbar . $htmlpreferences;
     }
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Helper methods
-    ////////////////////////////////////////////////////////////////////////////
 
     /**
      * Renders a form to set the multiuser collection view preferences
@@ -304,7 +303,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
      */
     protected function helper_sortable_heading($text, $sortid=null, $sortby=null, $sorthow=null) {
 
-        $out = html_writer::tag('span', $text, array('class'=>'text'));
+        $out = html_writer::tag('span', $text, array('class' => 'text'));
 
         if (!is_null($sortid)) {
             if ($sortby !== $sortid or $sorthow !== 'ASC') {
@@ -330,7 +329,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
      */
     protected function helper_fullname_format() {
 
-        $fake = new stdClass(); // fake user
+        $fake = new stdClass();
         $fake->lastname = 'LLLL';
         $fake->firstname = 'FFFF';
         $fullname = get_string('fullnamedisplay', '', $fake);

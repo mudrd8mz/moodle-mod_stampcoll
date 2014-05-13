@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -41,35 +40,35 @@ class mod_stampcoll_mod_form extends moodleform_mod {
 
         $mform = $this->_form;
 
-        // General -------------------------------------------------------------
+        // General.
         $mform->addElement('header', 'general', get_string('general', 'form'));
 
-        // Name
-        $mform->addElement('text', 'name', get_string('name'), array('size'=>'64'));
+        // Name.
+        $mform->addElement('text', 'name', get_string('name'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        // Description
+        // Description.
         $this->add_intro_editor(false);
 
-        // Stamp collection ----------------------------------------------------
+        // Stamp collection.
         $mform->addElement('header', 'stampcollection', get_string('modulename', 'stampcoll'));
 
-        // Stamp image
+        // Stamp image.
         $imageoptions = array('subdirs' => false, 'maxfiles' => 1, 'accepted_types' => array('image'),
             'maxbytes' => $COURSE->maxbytes, 'return_types' => FILE_INTERNAL);
         $mform->addElement('filemanager', 'image', get_string('stampimage', 'stampcoll'), null, $imageoptions);
         $mform->addHelpButton('image', 'stampimage', 'stampcoll');
 
-        // Display users with no stamps
+        // Display users with no stamps.
         $mform->addElement('selectyesno', 'displayzero', get_string('displayzero', 'stampcoll'));
         $mform->setDefault('displayzero', 0);
 
-        // Common module settings ----------------------------------------------
+        // Common module settings.
         $this->standard_coursemodule_elements();
 
-        // Buttons -------------------------------------------------------------
+        // Buttons.
         $this->add_action_buttons();
     }
 
@@ -81,7 +80,7 @@ class mod_stampcoll_mod_form extends moodleform_mod {
      *
      * @param array $defaultvalues
      */
-    function data_preprocessing(&$defaultvalues) {
+    public function data_preprocessing(&$defaultvalues) {
         global $COURSE;
 
         parent::data_preprocessing($defaultvalues);

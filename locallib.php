@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -107,10 +106,6 @@ class stampcoll {
         return new moodle_url('/mod/stampcoll/managestamps.php', array('cmid' => $this->cm->id));
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// HTML rendering API                                                         //
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Represents a single stamp to be rendered

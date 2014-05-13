@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,7 +24,7 @@ require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/locallib.php');
 require_once(dirname(__FILE__).'/addstamp_form.php');
 
-$scid = required_param('scid', PARAM_INT);  // stamp collection instance id
+$scid = required_param('scid', PARAM_INT);  // Stamp collection instance id.
 
 $stampcoll  = $DB->get_record('stampcoll', array('id' => $scid), '*', MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $stampcoll->course), '*', MUST_EXIST);

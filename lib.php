@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,9 +27,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-////////////////////////////////////////////////////////////////////////////////
-// Moodle core API                                                            //
-////////////////////////////////////////////////////////////////////////////////
+// Moodle core API.
 
 /**
  * Returns the information on whether the module supports a feature
@@ -42,11 +39,16 @@ defined('MOODLE_INTERNAL') || die();
 function stampcoll_supports($feature) {
 
     switch($feature) {
-        case FEATURE_MOD_INTRO:         return true;
-        case FEATURE_GROUPS:            return true;
-        case FEATURE_GRADE_HAS_GRADE:   return false;
-        case FEATURE_BACKUP_MOODLE2:    return true;
-        default:                        return null;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GRADE_HAS_GRADE:
+            return false;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        default:
+            return null;
     }
 }
 
@@ -71,12 +73,12 @@ function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mfo
         $fs = get_file_storage();
         foreach ($fs->get_area_files($context->id, 'mod_stampcoll', 'image', 0, 'timemodified DESC', false) as $storedfile) {
             $stampcoll->image = $storedfile->get_filename();
-            // note: $storedfile->get_imageinfo() returns width, height and mimetype
+            // Note: $storedfile->get_imageinfo() returns width, height and mimetype.
             break;
         }
     }
 
-    // save the new record into the database and reload it
+    // Save the new record into the database and reload it.
     return $DB->insert_record('stampcoll', $stampcoll);
 }
 
@@ -102,7 +104,7 @@ function stampcoll_update_instance(stdClass $stampcoll, mod_stampcoll_mod_form $
         $fs = get_file_storage();
         foreach ($fs->get_area_files($context->id, 'mod_stampcoll', 'image', 0, 'timemodified DESC', false) as $storedfile) {
             $stampcoll->image = $storedfile->get_filename();
-            // note: $storedfile->get_imageinfo() returns width, height and mimetype
+            // Note: $storedfile->get_imageinfo() returns width, height and mimetype.
             break;
         }
     }
@@ -146,7 +148,7 @@ function stampcoll_user_outline($course, $user, $mod, $stampcoll) {
     if ($stamps = $DB->get_records_select('stampcoll_stamps', 'userid=? AND stampcollid=?', array($user->id, $stampcoll->id))) {
         $result = new stdClass();
         $result->info = get_string('numberofcollectedstamps', 'stampcoll', count($stamps));
-        $result->time = 0;  // empty
+        $result->time = 0;
         return $result;
     }
     return null;
@@ -204,7 +206,7 @@ function stampcoll_user_complete($course, $user, $mod, $stampcoll) {
  * that has occurred in stampcoll activities and print it out.
  * Return true if there was output, or false is there was none.
  *
- * @return boolean
+ * @return boolean True if anything was printed, otherwise false.
  */
 function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
     global $CFG, $USER, $DB, $OUTPUT;
@@ -228,7 +230,7 @@ function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
 
     foreach ($rs as $activity) {
         if (!array_key_exists($activity->cmid, $modinfo->cms)) {
-            // this should not happen but just in case
+            // This should not happen but just in case.
             continue;
         }
 
@@ -236,12 +238,10 @@ function stampcoll_print_recent_activity($course, $viewfullnames, $timestart) {
         if (!$cm->uservisible) {
             continue;
         }
-
-
     }
     $rs->close();
 
-    return false;  //  True if anything was printed, otherwise false
+    return false;
 }
 
 /**
@@ -397,9 +397,7 @@ function stampcoll_get_extra_capabilities() {
     return array('moodle/site:accessallgroups');
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// File API                                                                   //
-////////////////////////////////////////////////////////////////////////////////
+// File API.
 
 /**
  * Returns the lists of all browsable file areas within the given module context
@@ -451,16 +449,14 @@ function stampcoll_pluginfile($course, $cm, $context, $filearea, array $args, $f
 
         $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
 
-        // finally send the file
+        // Finally send the file.
         send_stored_file($file, $lifetime, 0);
     }
 
     send_file_not_found();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Navigation API                                                             //
-////////////////////////////////////////////////////////////////////////////////
+// Navigation API.
 
 /**
  * Extends the global navigation tree by adding stampcoll nodes if there is a relevant content

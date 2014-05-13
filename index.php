@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -26,7 +25,7 @@
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
 require_once(dirname(__FILE__).'/lib.php');
 
-$id = required_param('id', PARAM_INT);   // course id
+$id = required_param('id', PARAM_INT);
 
 $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
 
@@ -42,14 +41,14 @@ $PAGE->set_title(format_string($course->fullname));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($coursecontext);
 
-// output starts here
+// Output starts here.
 echo $OUTPUT->header();
 
 if (!$stampcolls = get_all_instances_in_course('stampcoll', $course)) {
     notice(get_string('noinstances', 'stampcoll'), new moodle_url('/course/view.php', array('id' => $course->id)));
 }
 
-// get the ids of stampcoll instances, in order they appear in the course
+// Get the ids of stampcoll instances, in order they appear in the course.
 $stampcollids = array();
 foreach ($stampcolls as $stampcoll) {
     $stampcollids[] = $stampcoll->id;
@@ -82,7 +81,7 @@ foreach ($stampcolls as $stampcoll) {
     if (! $canviewsomestamps) {
         $countmystamps = get_string('notallowedtoviewstamps', 'stampcoll');
     } else {
-        // todo separated group mode and actual state of enrolments not taken into account here yet
+        // TODO Separated group mode and actual state of enrolments not taken into account here yet.
         $rawstamps = $DB->get_records('stampcoll_stamps', array('stampcollid' => $stampcoll->id), 'timecreated', '*');
 
         $counttotalstamps = count($rawstamps);

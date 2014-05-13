@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -35,14 +34,14 @@ class restore_stampcoll_activity_task extends restore_activity_task {
      * Define (add) particular settings this activity can have
      */
     protected function define_my_settings() {
-        // No particular settings for this activity
+        // No particular settings for this activity.
     }
 
     /**
      * Define (add) particular steps this activity can have
      */
     protected function define_my_steps() {
-        // stampcoll only has one structure step
+        // Stampcoll has only one structure step.
         $this->add_step(new restore_stampcoll_activity_structure_step('stampcoll_structure', 'stampcoll.xml'));
     }
 
@@ -104,7 +103,7 @@ class restore_stampcoll_activity_task extends restore_activity_task {
     static public function define_restore_log_rules_for_course() {
         $rules = array();
 
-        // Fix old wrong uses (missing extension)
+        // Fix old wrong uses (missing extension).
         $rules[] = new restore_log_rule('stampcoll', 'view all', 'index?id={course}', null,
                                         null, null, 'index.php?id={course}');
         $rules[] = new restore_log_rule('stampcoll', 'view all', 'index.php?id={course}', null);

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -32,7 +31,10 @@ $logs = array(
     array('module' => 'stampcoll', 'action' => 'update', 'mtable' => 'stampcoll', 'field' => 'name'),
     array('module' => 'stampcoll', 'action' => 'add', 'mtable' => 'stampcoll', 'field' => 'name'),
     array('module' => 'stampcoll', 'action' => 'manage', 'mtable' => 'stampcoll', 'field' => 'name'),
-    array('module' => 'stampcoll', 'action' => 'add stamp', 'mtable' => 'user', 'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
-    array('module' => 'stampcoll', 'action' => 'update stamp', 'mtable' => 'user', 'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
-    array('module' => 'stampcoll', 'action' => 'delete stamp', 'mtable' => 'user', 'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
+    array('module' => 'stampcoll', 'action' => 'add stamp', 'mtable' => 'user',
+        'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
+    array('module' => 'stampcoll', 'action' => 'update stamp', 'mtable' => 'user',
+        'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
+    array('module' => 'stampcoll', 'action' => 'delete stamp', 'mtable' => 'user',
+        'field' => $DB->sql_concat('firstname', "' '", 'lastname')),
 );

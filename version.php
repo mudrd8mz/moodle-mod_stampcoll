@@ -30,6 +30,3 @@ $plugin->version    = 2014050600;
 $plugin->requires   = 2013101800;
 $plugin->maturity   = MATURITY_STABLE;
 $plugin->cron       = 0;
-$plugin->dependencies = array(
-    'mod_stampcoll' => 2011120716,
-);

@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component  = 'mod_stampcoll';
-$plugin->release    = 'v2.6.0';
-$plugin->version    = 2014050600;
-$plugin->requires   = 2013101800;
-$plugin->maturity   = MATURITY_STABLE;
+$plugin->release    = 'DEV-master';
+$plugin->version    = 2014111200;
+$plugin->requires   = 2014051200;
+$plugin->maturity   = MATURITY_ALPHA;
 $plugin->cron       = 0;

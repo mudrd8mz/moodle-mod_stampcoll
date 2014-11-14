@@ -26,13 +26,13 @@ require_once(dirname(__FILE__).'/addstamp_form.php');
 
 $scid = required_param('scid', PARAM_INT);  // Stamp collection instance id.
 
-$stampcoll  = $DB->get_record('stampcoll', array('id' => $scid), '*', MUST_EXIST);
-$course     = $DB->get_record('course', array('id' => $stampcoll->course), '*', MUST_EXIST);
-$cm         = get_coursemodule_from_instance('stampcoll', $stampcoll->id, $course->id, false, MUST_EXIST);
+$stampcollr = $DB->get_record('stampcoll', array('id' => $scid), '*', MUST_EXIST);
+$course     = $DB->get_record('course', array('id' => $stampcollr->course), '*', MUST_EXIST);
+$cm         = get_coursemodule_from_instance('stampcoll', $stampcollr->id, $course->id, false, MUST_EXIST);
 
 require_login($course, false, $cm);
 
-$stampcoll = new stampcoll($stampcoll, $cm, $course);
+$stampcoll = new stampcoll($stampcollr, $cm, $course);
 
 if (isguestuser()) {
     print_error('guestsarenotallowed');
@@ -56,14 +56,24 @@ if ($data = $form->get_data()) {
         throw new moodle_exception('invalid_userto_id', 'stampcoll');
     }
 
-    add_to_log($course->id, 'stampcoll', 'add stamp', 'view.php?id='.$cm->id, $data->userto, $cm->id);
-
-    $DB->insert_record('stampcoll_stamps', array(
+    $stampid = $DB->insert_record('stampcoll_stamps', array(
         'stampcollid'   => $stampcoll->id,
         'userid'        => $data->userto,
         'giver'         => $data->userfrom,
         'text'          => $data->text,
         'timecreated'   => time()));
+
+    $event = \mod_stampcoll\event\stamp_added::create(array(
+        'objectid' => $stampid,
+        'context' => $stampcoll->context,
+        'courseid' => $stampcoll->course->id,
+        'relateduserid' => $data->userto,
+    ));
+
+    $event->add_record_snapshot('course', $course);
+    $event->add_record_snapshot('course_modules', $cm);
+    $event->add_record_snapshot('stampcoll', $stampcollr);
+    $event->trigger();
 
     redirect(new moodle_url('/mod/stampcoll/view.php', array('id' => $cm->id, 'view' => 'single', 'userid' => $data->userto)));
 }

@@ -42,7 +42,7 @@ $perpage    = optional_param('perpage', stampcoll::USERS_PER_PAGE, PARAM_INT);  
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$stampcoll  = $DB->get_record('stampcoll', array('id' => $cm->instance), '*', MUST_EXIST);
+$stampcollr = $DB->get_record('stampcoll', array('id' => $cm->instance), '*', MUST_EXIST);
 
 if (!in_array($view, array('own', 'all', 'single'))) {
     $view = 'all';
@@ -66,7 +66,7 @@ if ($page < 0) {
 
 require_login($course, true, $cm);
 
-$stampcoll = new stampcoll($stampcoll, $cm, $course);
+$stampcoll = new stampcoll($stampcollr, $cm, $course);
 
 if ($view == 'single' and $userid == $USER->id) {
     $view = 'own';
@@ -78,7 +78,18 @@ $PAGE->set_heading($course->fullname);
 
 require_capability('mod/stampcoll:view', $stampcoll->context);
 
-add_to_log($course->id, 'stampcoll', 'view', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
+$event = \mod_stampcoll\event\course_module_viewed::create(array(
+    'objectid' => $stampcoll->id,
+    'context' => $stampcoll->context,
+    'other' => array(
+        'viewmode' => $view,
+    ),
+));
+
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('course_modules', $cm);
+$event->add_record_snapshot('stampcoll', $stampcollr);
+$event->trigger();
 
 if ($updatepref) {
     require_sesskey();

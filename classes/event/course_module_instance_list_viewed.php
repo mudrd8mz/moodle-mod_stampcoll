@@ -15,18 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Stamp collection module version
- *
- * @package    mod_stampcoll
- * @copyright  2007 David Mudrak <david@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_stampcoll
+ * @category    event
+ * @copyright   2014 David Mudrak <david@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+namespace mod_stampcoll\event;
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component  = 'mod_stampcoll';
-$plugin->release    = 'DEV-master';
-$plugin->version    = 2014111204;
-$plugin->requires   = 2014051200;
-$plugin->maturity   = MATURITY_ALPHA;
-$plugin->cron       = 0;
+/**
+ * Defines the 'stamp collection instance list viewed' class.
+ *
+ * @copyright 2014 David Mudrak <david@moodle.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_module_instance_list_viewed extends \core\event\course_module_instance_list_viewed {
+    // Parent class handles it all for us.
+}

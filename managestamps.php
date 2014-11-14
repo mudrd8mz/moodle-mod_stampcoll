@@ -36,7 +36,7 @@ $confirmed  = optional_param('confirmed', false, PARAM_BOOL);                   
 
 $cm         = get_coursemodule_from_id('stampcoll', $cmid, 0, false, MUST_EXIST);
 $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$stampcoll  = $DB->get_record('stampcoll', array('id' => $cm->instance), '*', MUST_EXIST);
+$stampcollr = $DB->get_record('stampcoll', array('id' => $cm->instance), '*', MUST_EXIST);
 
 if (!in_array($sortby, array('firstname', 'lastname', 'count'))) {
     $sortby = 'lastname';
@@ -52,7 +52,7 @@ if ($page < 0) {
 
 require_login($course, true, $cm);
 
-$stampcoll = new stampcoll($stampcoll, $cm, $course);
+$stampcoll = new stampcoll($stampcollr, $cm, $course);
 
 $PAGE->set_url($stampcoll->managestamps_url());
 $PAGE->set_title($stampcoll->name);
@@ -60,7 +60,18 @@ $PAGE->set_heading($course->fullname);
 
 require_capability('mod/stampcoll:managestamps', $stampcoll->context);
 
-add_to_log($course->id, 'stampcoll', 'manage', 'view.php?id='.$cm->id, $stampcoll->id, $cm->id);
+$event = \mod_stampcoll\event\course_module_viewed::create(array(
+    'objectid' => $stampcoll->id,
+    'context' => $stampcoll->context,
+    'other' => array(
+        'viewmode' => 'manage',
+    ),
+));
+
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('course_modules', $cm);
+$event->add_record_snapshot('stampcoll', $stampcollr);
+$event->trigger();
 
 $output = $PAGE->get_renderer('mod_stampcoll');
 
@@ -74,8 +85,8 @@ if ($updatepref) {
 
 if ($delete) {
     // Make sure the stamp is from this collection.
-    $stamp = $DB->get_record('stampcoll_stamps', array('id' => $delete, 'stampcollid' => $stampcoll->id), '*', MUST_EXIST);
-    $stamp = new stampcoll_stamp($stampcoll, $stamp);
+    $stamprecord = $DB->get_record('stampcoll_stamps', array('id' => $delete, 'stampcollid' => $stampcoll->id), '*', MUST_EXIST);
+    $stamp = new stampcoll_stamp($stampcoll, $stamprecord);
     if (!$confirmed) {
         // Let the user confirm.
         echo $output->header();
@@ -87,7 +98,19 @@ if ($delete) {
         die();
     } else {
         require_sesskey();
-        add_to_log($course->id, 'stampcoll', 'delete stamp', 'view.php?id='.$cm->id, $stamp->holderid, $cm->id);
+        $event = \mod_stampcoll\event\stamp_deleted::create(array(
+            'objectid' => $stamp->id,
+            'context' => $stampcoll->context,
+            'courseid' => $stampcoll->course->id,
+            'relateduserid' => $stamp->holderid,
+        ));
+
+        $event->add_record_snapshot('course', $course);
+        $event->add_record_snapshot('course_modules', $cm);
+        $event->add_record_snapshot('stampcoll', $stampcollr);
+        $event->add_record_snapshot('stampcoll_stamps', $stamprecord);
+        $event->trigger();
+
         $DB->delete_records('stampcoll_stamps', array('id' => $stamp->id));
         redirect($PAGE->url);
     }
@@ -117,15 +140,25 @@ if ($data = data_submitted()) {
                 continue;
             }
 
-            add_to_log($course->id, 'stampcoll', 'add stamp', 'view.php?id='.$cm->id, $holderid, $cm->id);
-
-            $DB->insert_record('stampcoll_stamps', array(
+            $stampid = $DB->insert_record('stampcoll_stamps', array(
                 'stampcollid'   => $stampcoll->id,
                 'userid'        => $holderid,
                 'giver'         => $USER->id,
                 'text'          => $text,
                 'timecreated'   => $now),
-            false, true);
+            true, true);
+
+            $event = \mod_stampcoll\event\stamp_added::create(array(
+                'objectid' => $stampid,
+                'context' => $stampcoll->context,
+                'courseid' => $stampcoll->course->id,
+                'relateduserid' => $holderid,
+            ));
+
+            $event->add_record_snapshot('course', $course);
+            $event->add_record_snapshot('course_modules', $cm);
+            $event->add_record_snapshot('stampcoll', $stampcollr);
+            $event->trigger();
         }
     }
 
@@ -159,9 +192,19 @@ if ($data = data_submitted()) {
                 $update->timemodified = $now;
                 $update->modifier = $USER->id;
 
-                add_to_log($course->id, 'stampcoll', 'update stamp', 'view.php?id='.$cm->id, $current->userid, $cm->id);
-
                 $DB->update_record('stampcoll_stamps', $update, true);
+
+                $event = \mod_stampcoll\event\stamp_updated::create(array(
+                    'objectid' => $stampid,
+                    'context' => $stampcoll->context,
+                    'courseid' => $stampcoll->course->id,
+                    'relateduserid' => $current->userid,
+                ));
+
+                $event->add_record_snapshot('course', $course);
+                $event->add_record_snapshot('course_modules', $cm);
+                $event->add_record_snapshot('stampcoll', $stampcollr);
+                $event->trigger();
             }
         }
     }

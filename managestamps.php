@@ -284,7 +284,7 @@ if ($userids) {
          LEFT JOIN {stampcoll_stamps} s ON s.stampcollid = :stampcollid AND s.userid = hu.id
          LEFT JOIN {user} gu ON s.giver = gu.id AND gu.deleted = 0
              WHERE hu.id $holdersql
-          ORDER BY COALESCE(s.timemodified, s.timecreated) DESC";
+          ORDER BY s.timecreated DESC";
 
     $params = array_merge(array('stampcollid' => $stampcoll->id), $holderparam);
 

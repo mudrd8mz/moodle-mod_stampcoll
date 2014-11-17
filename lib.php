@@ -27,6 +27,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/repository/lib.php');
+
 // Moodle core API.
 
 /**
@@ -56,10 +58,9 @@ function stampcoll_supports($feature) {
  * Creates a new instance of the stamp collection and returns its id
  *
  * @param object $stampcoll object containing data defined by the mod_form.php
- * @param mod_stampcoll_mod_form $mform
  * @return int id of the new instance
  */
-function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
+function stampcoll_add_instance(stdClass $stampcoll) {
     global $DB, $COURSE;
 
     $stampcoll->timemodified = time();
@@ -86,10 +87,9 @@ function stampcoll_add_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mfo
  * Updates an existing instance of stamp collection with new data
  *
  * @param object $stampcoll object containing data defined by the mod_form.php
- * @param mod_stampcoll_mod_form $mform
  * @return boolean
  */
-function stampcoll_update_instance(stdClass $stampcoll, mod_stampcoll_mod_form $mform) {
+function stampcoll_update_instance(stdClass $stampcoll) {
     global $DB, $COURSE;
 
     $stampcoll->id = $stampcoll->instance;

@@ -199,20 +199,27 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
         );
 
         foreach ($holders as $holder) {
-            $picture    = $this->output->user_picture($holder);
-            $fullname   = fullname($holder);
-            $fullname   = html_writer::link(
-                            new moodle_url($collection->stampcoll->view_url(), array('view' => 'single', 'userid' => $holder->id)),
-                            $fullname);
-            $collected  = $collection->list_stamps($holder->id);
-            $count      = count($collected);
+            $picture = $this->output->user_picture($holder);
+            $fullname = fullname($holder);
+            $holder->fullname = $fullname;
+            $fullname = html_writer::link(
+                new moodle_url($collection->stampcoll->view_url(), array('view' => 'single', 'userid' => $holder->id)),
+                $fullname
+            );
+            $collected = $collection->list_stamps($holder->id);
+            $count = count($collected);
+
+            $label = html_writer::tag('label', get_string('managegivestampto', 'mod_stampcoll', $holder), array(
+                'for' => 'stampcoll_add_'.$holder->id,
+            ));
 
             $textform = html_writer::tag('textarea', '', array(
                 'placeholder' => get_string('addstamp', 'mod_stampcoll'),
+                'id' => 'stampcoll_add_'.$holder->id,
                 'name' => 'addnewstamp['.$holder->id.']'
             ));
 
-            $row = new html_table_row(array($picture, $fullname, $count, $textform));
+            $row = new html_table_row(array($picture, $fullname, $count, $label.$textform));
             $row->attributes['class'] = 'holderinfo';
             foreach ($row->cells as $cell) {
                 $cell->rowspan = $count + 1;
@@ -223,8 +230,22 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
             $table->data[] = $row;
 
             if (!empty($collected)) {
+                $counter = count($collected);
                 foreach ($collected as $stamp) {
-                    $newtext = html_writer::tag('textarea', s($stamp->text), array('name' => 'stampnewtext['.$stamp->id.']'));
+                    $label = html_writer::tag(
+                        'label',
+                        get_string('manageupdatestamp', 'mod_stampcoll', array(
+                            'fullname' => $holder->fullname,
+                            'number' => $counter,
+                        )),
+                        array(
+                            'for' => 'stampcoll_update_'.$stamp->id,
+                        )
+                    );
+                    $newtext = html_writer::tag('textarea', s($stamp->text), array(
+                        'id' => 'stampcoll_update_'.$stamp->id,
+                        'name' => 'stampnewtext['.$stamp->id.']',
+                    ));
                     $oldtext = html_writer::empty_tag('input',
                         array('value' => s($stamp->text), 'type' => 'hidden', 'name' => 'stampoldtext['.$stamp->id.']'));
                     if ($stamp->giverid) {
@@ -236,7 +257,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
                         $giver = '-';
                     }
                     $row = new html_table_row(array(
-                        $newtext.$oldtext,
+                        $label.$newtext.$oldtext,
                         userdate($stamp->timecreated, get_string('strftimedate', 'core_langconfig')),
                         $giver,
                         html_writer::link(new moodle_url($collection->stampcoll->managestamps_url(),
@@ -244,6 +265,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
                     ));
                     $row->attributes['class'] = 'stampinfo';
                     $table->data[] = $row;
+                    $counter--;
                 }
             }
         }

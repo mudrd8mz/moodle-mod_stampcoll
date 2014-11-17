@@ -38,6 +38,8 @@ $string['filearea_image'] = 'Stamp image';
 $string['givenby'] = 'From: {$a}';
 $string['givento'] = 'To: {$a}';
 $string['managestamps'] = 'Manage stamps';
+$string['managegivestampto'] = 'Give new stamp to {$a->fullname}';
+$string['manageupdatestamp'] = 'Update stamp #{$a->number} of {$a->fullname}';
 $string['modulename'] = 'Stamp collection';
 $string['modulename_help'] = 'The Stamp collection module allows to give so called stamps (picture with a comment) to users so they collect these stamps. Students can be allowed to give stamps to other students and stamps may be given to teachers, too.
 

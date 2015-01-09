@@ -1,3 +1,21 @@
+v3.1
+====
+
+* The activity description can be displayed at the course main page.
+* New event triggered when user receives a stamp (allows integration with the Level Up! block).
+
+v3.0
+====
+
+* Added support for the new events and logging APIs.
+* Added Behat tests for the main features.
+* Added generator for automatic creation of the module instances.
+* Added accessibility labels to textarea fields at the management screen.
+* The order of stamps at the management screen no longer affected by the stamp modification time.
+* Changed versioning scheme. The Git 'master' branch now contains the most recent stable code.
+
+Tested on Moodle 2.7 and 2.8.
+
 v2.6.0
 ======
 

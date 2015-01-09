@@ -159,6 +159,19 @@ if ($data = data_submitted()) {
             $event->add_record_snapshot('course_modules', $cm);
             $event->add_record_snapshot('stampcoll', $stampcollr);
             $event->trigger();
+
+            $event = \mod_stampcoll\event\stamp_granted::create(array(
+                'objectid' => $stampid,
+                'context' => $stampcoll->context,
+                'courseid' => $stampcoll->course->id,
+                'userid' => $holderid,
+                'relateduserid' => $USER->id,
+            ));
+
+            $event->add_record_snapshot('course', $course);
+            $event->add_record_snapshot('course_modules', $cm);
+            $event->add_record_snapshot('stampcoll', $stampcollr);
+            $event->trigger();
         }
     }
 

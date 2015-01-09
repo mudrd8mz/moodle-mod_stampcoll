@@ -75,6 +75,19 @@ if ($data = $form->get_data()) {
     $event->add_record_snapshot('stampcoll', $stampcollr);
     $event->trigger();
 
+    $event = \mod_stampcoll\event\stamp_granted::create(array(
+        'objectid' => $stampid,
+        'context' => $stampcoll->context,
+        'courseid' => $stampcoll->course->id,
+        'userid' => $data->userto,
+        'relateduserid' => $USER->id,
+    ));
+
+    $event->add_record_snapshot('course', $course);
+    $event->add_record_snapshot('course_modules', $cm);
+    $event->add_record_snapshot('stampcoll', $stampcollr);
+    $event->trigger();
+
     redirect(new moodle_url('/mod/stampcoll/view.php', array('id' => $cm->id, 'view' => 'single', 'userid' => $data->userto)));
 }
 

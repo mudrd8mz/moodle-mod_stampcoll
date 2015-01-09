@@ -33,6 +33,7 @@ $string['displayzero'] = 'Display users with no stamps';
 $string['editstamp'] = 'Edit stamp';
 $string['eventstampadded'] = 'Stamp given';
 $string['eventstampdeleted'] = 'Stamp deleted';
+$string['eventstampgranted'] = 'Stamp received';
 $string['eventstampupdated'] = 'Stamp updated';
 $string['filearea_image'] = 'Stamp image';
 $string['givenby'] = 'From: {$a}';

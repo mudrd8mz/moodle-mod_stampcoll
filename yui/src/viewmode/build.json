@@ -1,0 +1,10 @@
+{
+    "name": "moodle-mod_stampcoll-viewmode",
+    "builds": {
+        "moodle-mod_stampcoll-viewmode": {
+            "jsfiles": [
+                "viewmode.js"
+            ]
+        }
+    }
+}

@@ -1,3 +1,6 @@
+@import "../../../theme/bootstrapbase/less/bootstrap/variables.less";
+@import "../../../theme/bootstrapbase/less/bootstrap/mixins.less";
+
 #page-mod-stampcoll-view {
 
     .box.collection {
@@ -15,6 +18,27 @@
         }
         .stamps {
             width: 60%;
+        }
+    }
+
+    .stamp-wrapper {
+        display: inline-block;
+        text-align: center;
+        font-size: small;
+
+        .stamp-text {
+            display: none;
+        }
+    }
+
+    .stamp-wrapper.viewmode-full {
+        border: 1px solid #ddd;
+        .border-radius(4px);
+        padding: 5px;
+        margin: 2px;
+
+        .stamp-text {
+            display: block;
         }
     }
 }

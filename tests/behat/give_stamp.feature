@@ -31,8 +31,9 @@ Feature: Student can give stamps to other students
     And I follow "Course 1"
     And I follow "Test stamp collection"
     And I click on "Student 2" "link" in the "//table/tbody/tr[td='Student 2']/td[contains(concat(' ', normalize-space(@class), ' '), ' fullname ')]" "xpath_element"
-    When I set the field "text" to "\"/> Well done! <strong>You</strong><img"
+    When I set the field "text" to "/> Well done! <strong>You</strong><img"
     And I click on "submit" "button" in the "region-main" "region"
     Then I should see "Student 2" in the "region-main" "region"
     And I should see "Number of collected stamps: 1" in the "region-main" "region"
-    And "//img[@alt='&quot;/&gt; Well done! &lt;strong&gt;You&lt;/strong&gt;&lt;img']" "xpath_element" should exist
+    And "//div[@class='stamp-wrapper']/div[@class='stamp-image']/img" "xpath_element" should exist
+    And "//div[@class='stamp-wrapper']/div[@class='stamp-text' and text()='/> Well done! <strong>You</strong><img']" "xpath_element" should exist

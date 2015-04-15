@@ -45,10 +45,14 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
                 'image', 0, '/', $stamp->stampcoll->image);
         }
 
-        $attributes = array('src' => $src, 'alt' => s($stamp->text), 'title' => s($stamp->text), 'class' => 'stamp');
+        $attributes = array('src' => $src, 'alt' => get_string('stampalt', 'mod_stampcoll'), 'class' => 'stamp');
         $stampimg   = html_writer::empty_tag('img', $attributes);
+        $stampimg = html_writer::div($stampimg, 'stamp-image');
+        $stamptext = html_writer::div(nl2br(s($stamp->text)), 'stamp-text');
 
-        return $stampimg;
+        $stampdiv = html_writer::div($stampimg.$stamptext, 'stamp-wrapper');
+
+        return $stampdiv;
     }
 
     /**

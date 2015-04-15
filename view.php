@@ -75,6 +75,9 @@ if ($view == 'single' and $userid == $USER->id) {
 $PAGE->set_url(new moodle_url($stampcoll->view_url(), array('view' => $view)));
 $PAGE->set_title($stampcoll->name);
 $PAGE->set_heading($course->fullname);
+$PAGE->set_button(html_writer::empty_tag('span', array('id' => 'mod_stampcoll_viewmode_toggle')));
+$PAGE->requires->yui_module('moodle-mod_stampcoll-viewmode', 'M.mod_stampcoll.viewmode.init');
+$PAGE->requires->strings_for_js(array('toggleviewmode'), 'mod_stampcoll');
 
 require_capability('mod/stampcoll:view', $stampcoll->context);
 

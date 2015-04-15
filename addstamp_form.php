@@ -57,6 +57,7 @@ class stampcoll_stamp_form extends moodleform {
 
         $mform->addElement('textarea', 'text', get_string('stamptext', 'stampcoll'), array('cols' => 40, 'rows' => 5));
         $mform->setType('text', PARAM_RAW);
+        $mform->addRule('text', get_string('errtextlength', 'mod_stampcoll'), 'maxlength', 255, 'client', false, false);
 
         $mform->addGroup(array(
             $mform->createElement('submit', 'submit', get_string('addstampbutton', 'stampcoll')),
@@ -68,5 +69,23 @@ class stampcoll_stamp_form extends moodleform {
 
         $mform->addElement('hidden', 'userfrom');
         $mform->setType('userfrom', PARAM_INT);
+    }
+
+    /**
+     * Validate the form fields
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files) {
+
+        $errors = array();
+
+        if (core_text::strlen($data['text']) > 255) {
+            $errors['text'] = get_string('errtextlength', 'mod_stampcoll');
+        }
+
+        return $errors;
     }
 }

@@ -139,6 +139,10 @@ if ($data = data_submitted()) {
                 // In the bulk mode, only stamps with text can be added.
                 continue;
             }
+            if (core_text::strlen($text) > 255) {
+                debugging('Stamp text too long - user id '.$holderid);
+                continue;
+            }
 
             $stampid = $DB->insert_record('stampcoll_stamps', array(
                 'stampcollid'   => $stampcoll->id,
@@ -197,6 +201,11 @@ if ($data = data_submitted()) {
                 continue;
             }
             $current = $stamps[$stampid];
+
+            if (core_text::strlen($text) > 255) {
+                debugging('Stamp text too long - stamp id '.$stampid);
+                continue;
+            }
 
             if ($current->text !== $text) {
                 $update = new stdClass();

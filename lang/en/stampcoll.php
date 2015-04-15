@@ -31,6 +31,7 @@ $string['deletestamp'] = 'Delete';
 $string['deletestampconfirm'] = 'Do you really want to delete this stamp?';
 $string['displayzero'] = 'Display users with no stamps';
 $string['editstamp'] = 'Edit stamp';
+$string['errtextlength'] = 'Text too long';
 $string['eventstampadded'] = 'Stamp given';
 $string['eventstampdeleted'] = 'Stamp deleted';
 $string['eventstampgranted'] = 'Stamp received';

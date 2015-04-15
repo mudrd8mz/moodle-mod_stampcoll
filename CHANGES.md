@@ -1,3 +1,13 @@
+v3.2
+====
+
+* Added new button _Toggle stamp display mode_ button that allows to display stamps together
+  with their text comments. For accessibility reasons, displaying the text via the `alt` and the
+  `title` image attribute was dropped.
+* Validation checks for the text maximum length (255 characters) are now performed when giving
+  a stamp. In the stamps management screen, attempting to add/update a stamp with too long text
+  leads to silently skipping such change. This should be improved in the future.
+
 v3.1
 ====
 

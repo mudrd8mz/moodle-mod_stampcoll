@@ -1,3 +1,8 @@
+v3.3
+====
+
+* Added support for Moodle 2.9 - does not use `add_intro_editor()` for this and higher versions.
+
 v3.2
 ====
 

@@ -36,7 +36,7 @@ class mod_stampcoll_mod_form extends moodleform_mod {
      * Defines the form
      */
     public function definition() {
-        global $COURSE;
+        global $COURSE, $CFG;
 
         $mform = $this->_form;
 
@@ -50,7 +50,11 @@ class mod_stampcoll_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
         // Description.
-        $this->add_intro_editor(false);
+        if ($CFG->branch >= 29) {
+            $this->standard_intro_elements();
+        } else {
+            $this->add_intro_editor(false);
+        }
 
         // Stamp collection.
         $mform->addElement('header', 'stampcollection', get_string('modulename', 'stampcoll'));

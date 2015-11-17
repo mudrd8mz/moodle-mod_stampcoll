@@ -1,6 +1,8 @@
 Stamp collection module
 =======================
 
+[![Build Status](https://travis-ci.org/mudrd8mz/moodle-mod_stampcoll.svg?branch=master)](https://travis-ci.org/mudrd8mz/moodle-mod_stampcoll)
+
 The Stamp collection module allows a teacher to give "stamps" (i.e. picture
 with a comment) to students so they collect these stamps. The activity can be
 used in many ways, such as motivative bonus marks, absence marks, certification

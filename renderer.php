@@ -276,7 +276,8 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
 
         $htmltable = html_writer::table($table);
         $htmlsubmit = html_writer::tag('div',
-            html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('updatestamps', 'mod_stampcoll'))).
+            html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('updatestamps', 'mod_stampcoll'),
+                'class' => 'btn btn-primary')).
             html_writer::empty_tag('input', array('type' => 'hidden', 'value' => sesskey(), 'name' => 'sesskey')),
             array('class' => 'submitwrapper'));
         $htmlform = html_writer::tag('form', $htmltable . $htmlsubmit,
@@ -302,8 +303,10 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
         $mform->addElement('hidden', 'updatepref', 1);
 
         $mform->addElement('header', 'qgprefs', get_string('preferences'));
+        $mform->setExpanded('qgprefs', false);
 
         $mform->addElement('text', 'perpage', get_string('perpage', 'stampcoll'), array('size' => 2));
+        $mform->setType('perpage', PARAM_INT);
         $mform->setDefault('perpage', $perpage);
 
         $mform->addElement('submit', 'savepreferences', get_string('savepreferences'));

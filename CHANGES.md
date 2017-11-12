@@ -1,3 +1,9 @@
+### 3.4.0 ###
+
+* The `pix_url()` is not used to display the default stamp image any
+  more (deprecated in Moodle 3.3).
+* Update travis-ci configuration.
+
 ### 3.3.1 ###
 
 * Grunt is now used to compile the LESS to CSS.

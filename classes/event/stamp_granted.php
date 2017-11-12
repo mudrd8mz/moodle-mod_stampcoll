@@ -60,8 +60,8 @@ class stamp_granted extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' received stamp with id '$this->objectid' from the user with id '$this->relateduserid' ".
-            "in the stamp collection with the course module id '$this->contextinstanceid'.";
+        return "The user with id '$this->userid' received stamp with id '$this->objectid' from the user with ".
+            "id '$this->relateduserid' in the stamp collection with the course module id '$this->contextinstanceid'.";
     }
 
     /**

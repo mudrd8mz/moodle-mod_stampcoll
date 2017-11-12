@@ -57,8 +57,8 @@ class stamp_updated extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' updated stamp with id '$this->objectid' of the user with id '$this->relateduserid' ".
-            "in the stamp collection with the course module id '$this->contextinstanceid'.";
+        return "The user with id '$this->userid' updated stamp with id '$this->objectid' of the user with ".
+            "id '$this->relateduserid' in the stamp collection with the course module id '$this->contextinstanceid'.";
     }
 
     /**

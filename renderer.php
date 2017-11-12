@@ -38,7 +38,7 @@ class mod_stampcoll_renderer extends plugin_renderer_base {
     protected function render_stampcoll_stamp(stampcoll_stamp $stamp) {
 
         if (empty($stamp->stampcoll->image)) {
-            $src = $this->pix_url('defaultstamp', 'mod_stampcoll');
+            $src = $this->image_url('defaultstamp', 'mod_stampcoll');
 
         } else {
             $src = moodle_url::make_pluginfile_url($stamp->stampcoll->context->id, 'mod_stampcoll',

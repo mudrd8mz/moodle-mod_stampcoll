@@ -4,13 +4,13 @@ module.exports = function (grunt) {
     // Load all grunt tasks.
     grunt.loadNpmTasks("grunt-contrib-less");
     grunt.loadNpmTasks("grunt-contrib-watch");
-    grunt.loadNpmTasks("grunt-contrib-clean");
+    grunt.loadNpmTasks('grunt-stylelint');
 
     grunt.initConfig({
         watch: {
-            // If any .less file changes in directory "less" then run the "less" task.
+            // If any .less file changes in directory "less" then run the tasks.
             files: "less/*.less",
-            tasks: ["less"]
+            tasks: ["stylelint", "less"]
         },
         less: {
             // Production config is also available.
@@ -25,8 +25,23 @@ module.exports = function (grunt) {
                     "styles.css": "less/styles.less"
                 }
             },
-        }
+        },
+		stylelint: {
+			less: {
+				options: {
+					syntax: 'less',
+					configOverrides: {
+						rules: {
+							// These rules have to be disabled in .stylelintrc for scss compat.
+							"at-rule-no-unknown": true,
+						}
+					}
+				},
+				src: ['less/*.less']
+			}
+		}
     });
+
     // The default task (running "grunt" in console).
-    grunt.registerTask("default", ["less"]);
+    grunt.registerTask("default", ["stylelint", "less"]);
 };

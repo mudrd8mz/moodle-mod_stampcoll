@@ -1,3 +1,12 @@
+### 3.6.0 ###
+
+* Privacy API implemented. Credit goes to Tony Butler (@tonyjbutler) for the
+  contribution.
+
+### 3.5.0 ###
+
+* Was never released.
+
 ### 3.4.0 ###
 
 * The `pix_url()` is not used to display the default stamp image any
